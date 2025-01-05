@@ -1,0 +1,14 @@
+{
+  "name": "praca4",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/validator": "^13.12.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "validator": "^13.12.0"
+  }
+}
