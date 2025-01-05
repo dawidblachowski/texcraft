@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id          String         @id @default(uuid())
+  email       String?        @unique
+  role        String         @default("USER")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  projects    Project[]
+  
+  // Każdy User może mieć wiele sposobów logowania
+  authAccounts AuthAccount[]
+}
+
+model AuthAccount {
+  id                String   @id @default(uuid())
+  provider          String   // "local", "google", "github", "custom-oidc" itp.
+  providerAccountId String   // identyfikator użytkownika w danym providerze (np. email, sub)
+  
+  // hasło (tylko local) – przy innych providerach może być null
+  password          String?
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerAccountId]) 
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OAuthProvider {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  clientId     String
+  clientSecret String
+  discoveryUrl String
+  isEnabled    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Project {
+  id         String   @id @default(uuid())
+  title      String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
