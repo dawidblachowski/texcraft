@@ -1,5 +1,6 @@
 import { User } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
+import UserService from "@/services/user.service";
 
 export class UserController {
     static async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
