@@ -7,21 +7,30 @@ import bodyParser from 'body-parser';
 
 import passport from 'passport';
 import './config/passport';
+import { initOAuth2Strategy } from './config/passport';
 
-const app = express();
 
-app.use(express.json());
-app.use(bodyParser.json());
-app.use(passport.initialize());
+async function main() {
+  const app = express();
 
-app.use('/api', apiRouter);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+  app.use(express.json());
+  app.use(bodyParser.json());
+  app.use(passport.initialize());
+  await initOAuth2Strategy();
 
-if(NODE_ENV === 'development') {
-  require('./config/swagger');
+  app.use('/api', apiRouter);
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+
+  if (NODE_ENV === 'development') {
+    require('./config/swagger');
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
 }
 
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+main().catch((error) => {
+  console.error("Error", error);
+  process.exit(1);
 });

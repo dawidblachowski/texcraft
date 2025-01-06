@@ -6,8 +6,13 @@ const router = Router();
 
 router.use(cookieParser());
 
+//local
 router.post("/register", AuthController.register);
 router.post("/login", AuthController.localLogin);
 router.post("/refresh", AuthController.refreshTokens);
+
+//oauth
+router.get("/oauth2", AuthController.oauth2Login);
+router.get("/oauth2/callback", AuthController.oauth2Callback);
 
 export default router;
