@@ -3,9 +3,6 @@ import AuthService from "@/services/auth.service";
 import passport from "passport";
 import { User } from "@prisma/client";
 
-import { ErrorResponseDto } from "@shared/dto/errorResponse.dto";
-import { UserTokensDto } from "@shared/dto/user.dto";
-
 import { REFRESH_TOKEN_EXPIRES_IN } from "@/config/env";
 
 export default class AuthController {
@@ -16,7 +13,7 @@ export default class AuthController {
         */
         const { email, password } = req.body;
         if (!email || !password) {
-            res.status(400).json({ message: "Email and password are required" } as ErrorResponseDto);
+            res.status(400).json({ message: "Email and password are required" });
             return;
         }
         try {
@@ -24,7 +21,7 @@ export default class AuthController {
             res.status(201).json(user);
             return;
         } catch (error) {
-            res.status(500).json({ message: (error as Error).message } as ErrorResponseDto);
+            res.status(500).json({ message: (error as Error).message });
             return;
         }
     }
@@ -39,7 +36,7 @@ export default class AuthController {
             { session: false },
             async (error: Error, user: User | false, info: unknown) => {
                 if (error || !user) {
-                    res.status(401).json({ message: "Invalid email or password" } as ErrorResponseDto);
+                    res.status(401).json({ message: "Invalid email or password" });
                     return;
                 }
                 try {
@@ -62,7 +59,7 @@ export default class AuthController {
                     return;
                 }
                 catch (e) {
-                    res.status(500).json({ message: (e as Error).message } as ErrorResponseDto);
+                    res.status(500).json({ message: (e as Error).message });
                     return;
                 }
             }
@@ -75,7 +72,7 @@ export default class AuthController {
         */
         const { refreshToken } = req.cookies;
         if (!refreshToken) {
-            res.status(400).json({ message: "Refresh token is required" } as ErrorResponseDto);
+            res.status(400).json({ message: "Refresh token is required" });
             return;
         }
         try {
@@ -94,7 +91,7 @@ export default class AuthController {
             res.status(200).json({ accessToken: tokens.accessToken });
             return;
         } catch (error) {
-            res.status(500).json({ message: (error as Error).message } as ErrorResponseDto);
+            res.status(500).json({ message: (error as Error).message });
             return;
         }
     }

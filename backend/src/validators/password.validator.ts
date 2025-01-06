@@ -1,6 +1,6 @@
 import validator from 'validator';
 
-const registerPasswordValidator = (password: string): string | null => {
+const passwordValidator = (password: string): string | null => {
 
     if (!password || password.length < 8) {
         return 'Password must be at least 8 characters long';
@@ -21,4 +21,4 @@ const registerPasswordValidator = (password: string): string | null => {
   return null;
 };
 
-export default registerPasswordValidator;
+export default passwordValidator;

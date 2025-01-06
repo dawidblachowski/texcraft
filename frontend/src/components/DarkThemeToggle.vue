@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { useDarkModeStore } from '../stores/darkModeStore';
+import { useDarkModeStore } from '../stores/darkMode.store';
 
 const darkModeStore = useDarkModeStore();
 const checked = ref(darkModeStore.isDarkMode);

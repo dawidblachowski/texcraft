@@ -6,13 +6,21 @@ import Components from 'unplugin-vue-components/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    vue(), 
+    vue(),
     Components({
       resolvers: [
         PrimeVueResolver()
       ]
     })
   ],
+  css:
+  {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern'
+      }
+    }
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:3000'

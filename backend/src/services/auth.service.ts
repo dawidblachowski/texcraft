@@ -2,10 +2,8 @@ import prisma from "@/config/database";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-import registerEmailValidator from "@shared/validators/registerEmail.validator";
-import registerPasswordValidator from "@shared/validators/registerPassword.validator";
-
-import { UserAfterRegisterDto } from "@shared/dto/user.dto";
+import emailValidator from "../validators/email.validator";
+import passwordValidator from "../validators/password.validator";
 
 import { User } from "@prisma/client";
 
@@ -23,12 +21,12 @@ export default class AuthService {
             throw new Error("Email and password are required");
         }
 
-        const emailError = registerEmailValidator(email);
+        const emailError = emailValidator(email);
         if(emailError) {
             throw new Error(emailError);
         }
 
-        const passwordError = registerPasswordValidator(password);
+        const passwordError = passwordValidator(password);
         if(passwordError) {
             throw new Error(passwordError);
         }
@@ -63,13 +61,7 @@ export default class AuthService {
             }
         }); 
         
-        const userDto: UserAfterRegisterDto = {
-            id: newUser.id,
-            email: newUser.email,
-            role: newUser.role
-        };
-
-        return userDto;
+        return newUser;
     }
     static async generateNewTokens(user: User) {
         const accessToken = await this.generateAccessToken(user);

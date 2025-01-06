@@ -1,6 +1,6 @@
 import validator from 'validator';
 
-const registerEmailValidator = (email: string): string | null => {
+const emailValidator = (email: string): string | null => {
 
   if (!validator.isEmail(email)) {
     return 'Email is invalid';
@@ -9,4 +9,4 @@ const registerEmailValidator = (email: string): string | null => {
   return null;
 };
 
-export default registerEmailValidator;
+export default emailValidator;
