@@ -38,6 +38,11 @@
             icon="pi pi-user"
             class="w-full"
           />
+          <Button severity="info"
+            label="Zaloguj za pomocą OAuth2"
+            class="w-full mt-2"
+            @click="() => router.push({ name: 'OAuth2Login' })"
+          />
         </div>
         <Button severity="secondary" as="router-link" to="/register" link>
           Nie masz konta?
