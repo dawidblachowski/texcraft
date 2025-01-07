@@ -53,6 +53,8 @@ export default class AuthController {
                     res.cookie('refreshToken', tokens.refreshToken, {
                         httpOnly: true,
                         maxAge,
+                        secure: process.env.NODE_ENV === 'production',
+                        sameSite: 'none',
                     });
 
                     //and return access token
@@ -86,6 +88,8 @@ export default class AuthController {
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 maxAge,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'none',
             });
 
             //and return access token
@@ -132,6 +136,8 @@ export default class AuthController {
                 res.cookie('refreshToken', tokens.refreshToken, {
                     httpOnly: true,
                     maxAge,
+                    sameSite: 'none',
+                    secure: process.env.NODE_ENV === 'production',
                 });
 
                 // Return access token

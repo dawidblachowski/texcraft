@@ -152,11 +152,11 @@ export default class AuthService {
 
         switch (timeUnit) {
             case 'm':
-                return timeValue * 60;
+                return timeValue * 60 * 1000;
             case 'h':
-                return timeValue * 60 * 60;
+                return timeValue * 60 * 60 * 1000;
             case 'd':
-                return timeValue * 60 * 60 * 24;
+                return timeValue * 60 * 60 * 24 * 1000;
             default:
                 throw new Error("Invalid time unit in max age");
         }

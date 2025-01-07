@@ -52,6 +52,8 @@ model RefreshToken {
 model Project {
   id         String   @id @default(uuid())
   title      String
+  description String?
+  archived   Boolean  @default(false)
   userId     String
   user       User     @relation(fields: [userId], references: [id])
   createdAt  DateTime @default(now())
