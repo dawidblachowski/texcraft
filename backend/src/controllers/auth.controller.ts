@@ -4,6 +4,7 @@ import passport from "passport";
 import { User } from "@prisma/client";
 
 import { REFRESH_TOKEN_EXPIRES_IN } from "@/config/env";
+import prisma from "@/config/database";
 
 export default class AuthController {
     static async register(req: Request, res: Response, next: NextFunction): Promise<void> {
@@ -101,7 +102,7 @@ export default class AuthController {
         /*  #swagger.tags = ['Auth']
             #swagger.description = 'Login with OAuth2 provider'
         */
-        passport.authenticate('custom-oauth2', { 
+        passport.authenticate('custom-oauth2', {
             session: false,
             scope: ['openid', 'email', 'profile'],
         })(req, res, next);
@@ -114,27 +115,46 @@ export default class AuthController {
         */
         passport.authenticate('custom-oauth2', { session: false }, async (err: Error, user: User) => {
             if (err) {
-                return res.status(500).json({ message: err.message });
+                return res.redirect(`/login?error=${encodeURIComponent(err.message)}`);
             }
             if (!user) {
-                return res.status(401).json({ message: 'OAuth2 login error' });
+                return res.redirect(`/login?error=${encodeURIComponent('OAuth2 login failed')}`);
             }
-            // Generate tokens
-            const tokens = await AuthService.generateNewTokens(user);
+            try {
+                // Generate tokens
+                const tokens = await AuthService.generateNewTokens(user);
 
-            // Set httpOnly cookie with refresh token
-            if (!REFRESH_TOKEN_EXPIRES_IN) {
-                throw new Error('REFRESH_TOKEN_EXPIRES_IN is not defined');
+                // Set httpOnly cookie with refresh token
+                if (!REFRESH_TOKEN_EXPIRES_IN) {
+                    throw new Error('REFRESH_TOKEN_EXPIRES_IN is not defined');
+                }
+                const maxAge = AuthService.formatMaxAge(REFRESH_TOKEN_EXPIRES_IN);
+                res.cookie('refreshToken', tokens.refreshToken, {
+                    httpOnly: true,
+                    maxAge,
+                });
+
+                // Return access token
+                return res.redirect(`/auth/callback?accessToken=${encodeURIComponent(tokens.accessToken)}`);
+            } catch (error) {
+                res.redirect(`/login?error=${encodeURIComponent((error as Error).message)}`);
             }
-            const maxAge = AuthService.formatMaxAge(REFRESH_TOKEN_EXPIRES_IN);
-            res.cookie('refreshToken', tokens.refreshToken, {
-                httpOnly: true,
-                maxAge,
-            });
-
-            // Return access token
-            res.status(200).json({ accessToken: tokens.accessToken });
-
         })(req, res, next);
+    }
+
+    static async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+        /*  #swagger.tags = ['Auth']
+            #swagger.description = 'Logout'
+        */
+        const refreshToken = req.cookies.refreshToken;
+        res.clearCookie('refreshToken');
+
+        prisma.refreshToken.delete({
+            where:
+            {
+                token: refreshToken
+            }
+        });
+        res.status(200).json({ message: 'Logged out' });
     }
 }

@@ -8,11 +8,7 @@
             <Message severity="error">{{ errors.email }}</Message>
           </div>
           <FloatLabel variant="on">
-            <InputText
-              v-model="email"
-              :class="{ 'p-invalid': errors.email }"
-              fluid
-            />
+            <InputText v-model="email" :class="{ 'p-invalid': errors.email }" fluid />
             <label for="email">Email</label>
           </FloatLabel>
         </div>
@@ -21,28 +17,14 @@
             <Message severity="error">{{ errors.password }}</Message>
           </div>
           <FloatLabel variant="on">
-            <Password
-              v-model="password"
-              :feedback="false"
-              toggleMask
-              :class="{ 'p-invalid': errors.password }"
-              fluid
-            />
+            <Password v-model="password" :feedback="false" toggleMask :class="{ 'p-invalid': errors.password }" fluid />
             <label for="password">Hasło</label>
           </FloatLabel>
         </div>
         <div class="pt-5 w-full">
-          <Button
-            @click="onLogin"
-            label="Zaloguj się"
-            icon="pi pi-user"
-            class="w-full"
-          />
-          <Button severity="info"
-            label="Zaloguj za pomocą OAuth2"
-            class="w-full mt-2"
-            @click="() => router.push({ name: 'OAuth2Login' })"
-          />
+          <Button @click="onLogin" label="Zaloguj się" icon="pi pi-user" class="w-full" />
+          <Button severity="info" label="Login with OAuth2" class="w-full mt-2" @click="oauth2Login" />
+
         </div>
         <Button severity="secondary" as="router-link" to="/register" link>
           Nie masz konta?
@@ -69,6 +51,10 @@ const errors = ref<{ email: string | null; password: string | null }>({
   email: null,
   password: null,
 });
+
+const oauth2Login = () => {
+    window.location.href = '/api/auth/oauth2';
+};
 
 const validateInputs = () => {
   let valid = true;

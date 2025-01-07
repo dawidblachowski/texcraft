@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/Home.vue'
 import LoginPage from '../views/Login.vue'
 import RegisterPage from '../views/Register.vue'
+import OAuth2Callback from '../views/OAuth2Callback.vue'
 
 const routes = [
   {
@@ -18,7 +19,8 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: RegisterPage
-  }
+  }, 
+  { path: '/auth/callback', name: 'OAuth2Callback', component: OAuth2Callback },
 ]
 
 const router = createRouter({

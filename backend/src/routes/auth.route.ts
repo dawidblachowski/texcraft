@@ -10,6 +10,7 @@ router.use(cookieParser());
 router.post("/register", AuthController.register);
 router.post("/login", AuthController.localLogin);
 router.post("/refresh", AuthController.refreshTokens);
+router.post("/logout", AuthController.logout);
 
 //oauth
 router.get("/oauth2", AuthController.oauth2Login);

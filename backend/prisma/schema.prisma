@@ -17,6 +17,7 @@ model User {
 
   refreshTokens RefreshToken[]
   projects    Project[]
+  sharedProjects Project[] @relation("SharedProjects")
   
   // Każdy User może mieć wiele sposobów logowania
   authAccounts AuthAccount[]
@@ -55,4 +56,7 @@ model Project {
   user       User     @relation(fields: [userId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  sharedWith User[]   @relation("SharedProjects")
+
+  @@index([userId])
 }
