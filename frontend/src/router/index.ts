@@ -3,6 +3,7 @@ import HomePage from '../views/Home.vue'
 import LoginPage from '../views/Login.vue'
 import RegisterPage from '../views/Register.vue'
 import OAuth2Callback from '../views/OAuth2Callback.vue'
+import Editor from '../views/Editor.vue'
 
 const routes = [
   {
@@ -21,6 +22,11 @@ const routes = [
     component: RegisterPage
   }, 
   { path: '/auth/callback', name: 'OAuth2Callback', component: OAuth2Callback },
+  {
+    path: '/projects/:id', 
+    name: 'Project',
+    component: Editor
+  }
 ]
 
 const router = createRouter({
