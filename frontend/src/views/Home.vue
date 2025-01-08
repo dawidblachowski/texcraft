@@ -14,28 +14,28 @@
             <div class="flex-grow p-4">
                 <h1 class="text-2xl font-bold">{{ tableTitle }}</h1>
                 <div v-if="!projectsLoading">
-                <p v-if="projects.length==0">Nie znaleziono żadnych rekordów w bazie</p>
-                <DataTable :value="projects" tableStyle="min-width: 50rem" v-else  paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]" >
-                    <Column field="title" header="Nazwa" sortable>
-                        <template #body="{ data }">
-                            <router-link :to="'/projects/' + data.id">{{ data.title }}</router-link>
-                        </template>
-                    </Column>
-                    <Column field="description" header="Opis" sortable></Column>
-                    <Column field="createdAt" header="Data utworzenia" sortable></Column>
-                    <Column field="updatedAt" header="Data modyfikacji" sortable></Column>
-                    <Column field="user.email" header="Właściciel" sortable></Column>
-                    <Column header="Akcje">
-                        <template #body="{ data }">
-                            <div class="flex gap-2">
-                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-primary" @click="editProjectDialog=true; editProjectData={...data}" />
-                                <Button icon="pi pi-share-alt" class="p-button-rounded p-button-info" @click="shareProjectDialog=true;actualProject=data" />
-                                <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="deleteProjectDialog=true;actualProject=data" />
-                                <Button icon="pi pi-book" class="p-button-rounded p-button-warning" @click="archiveProject(data.id)" />
-                            </div>
-                        </template>
-                    </Column>
-                </DataTable>
+                    <p v-if="projects.length==0">Nie znaleziono żadnych rekordów w bazie</p>
+                    <DataTable :value="projects" tableStyle="min-width: 50rem" v-else paginator :rows="10" :rowsPerPageOptions="[5, 10, 20, 50]">
+                        <Column field="title" header="Nazwa" sortable>
+                            <template #body="{ data }">
+                                <router-link :to="'/projects/' + data.id">{{ data.title }}</router-link>
+                            </template>
+                        </Column>
+                        <Column field="description" header="Opis" sortable></Column>
+                        <Column field="createdAt" header="Data utworzenia" sortable></Column>
+                        <Column field="updatedAt" header="Data modyfikacji" sortable></Column>
+                        <Column field="user.email" header="Właściciel" sortable></Column>
+                        <Column header="Akcje">
+                            <template #body="{ data }">
+                                <div class="flex gap-2">
+                                    <Button icon="pi pi-pencil" class="p-button-rounded p-button-primary" @click="editProjectDialog=true; editProjectData={...data}" />
+                                    <Button icon="pi pi-share-alt" class="p-button-rounded p-button-info" @click="shareProjectDialog=true;actualProject=data" />
+                                    <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="deleteProjectDialog=true;actualProject=data" />
+                                    <Button icon="pi pi-book" class="p-button-rounded p-button-warning" @click="archiveProject(data.id)" />
+                                </div>
+                            </template>
+                        </Column>
+                    </DataTable>
                 </div>
                 <DataTable v-else :value="[{}, {}, {}, {}]">
                     <Column header="Nazwa">
@@ -94,30 +94,30 @@
         </Dialog>
         <Dialog header="Udostępnianie projektu" v-model:visible="shareProjectDialog" :draggable="false" :modal="true" :closable="true" :closeOnEscape="true" v-if="actualProject">
             <div class="p-fluid">
-            <div v-if="!projectDetailsLoading">
-                <div v-if="projectDetails.sharedWith.length != 0">
-                    <p class="font-bold mb-2">Udostępniono dla:</p>
-                    <ul class="list-disc pl-5">
-                        <li v-for="user in projectDetails.sharedWith" :key="user.email" class="flex justify-between items-center">
-                            <span>{{ user.email }}</span>
-                            <Button icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text" @click="removeUserFromShare(user.email, projectDetails.id)" />
-                        </li>
-                    </ul>
+                <div v-if="!projectDetailsLoading">
+                    <div v-if="projectDetails.sharedWith.length != 0">
+                        <p class="font-bold mb-2">Udostępniono dla:</p>
+                        <ul class="list-disc pl-5">
+                            <li v-for="user in projectDetails.sharedWith" :key="user.email" class="flex justify-between items-center">
+                                <span>{{ user.email }}</span>
+                                <Button icon="pi pi-times" class="p-button-rounded p-button-danger p-button-text" @click="removeUserFromShare(user.email, projectDetails.id)" />
+                            </li>
+                        </ul>
+                    </div>
+                    <div v-else>
+                        <p>Jeszcze nie udostępniono nikomu.</p>
+                    </div>
                 </div>
-                <div v-else>
-                    <p>Jeszcze nie udostępniono nikomu.</p>
-                </div>  
-            </div>
-            <Skeleton v-else></Skeleton>
-            <Divider />
-            <p class="font-bold">Dodaj adres email osoby, z którą chcesz udostępnić projekt</p>
-            <FloatLabel variant="in">
-                <InputText fluid id="email" v-model="shareEmail" />
-                <label for="email">Email: </label>
-            </FloatLabel>
-            <div class="field mt-2 flex justify-end">
-                <Button label="Udostępnij" icon="pi pi-share-alt" severity="info" @click="shareProject" />
-            </div>
+                <Skeleton v-else></Skeleton>
+                <Divider />
+                <p class="font-bold">Dodaj adres email osoby, z którą chcesz udostępnić projekt</p>
+                <FloatLabel variant="in">
+                    <InputText fluid id="email" v-model="shareEmail" />
+                    <label for="email">Email: </label>
+                </FloatLabel>
+                <div class="field mt-2 flex justify-end">
+                    <Button label="Udostępnij" icon="pi pi-share-alt" severity="info" @click="shareProject" />
+                </div>
             </div>
         </Dialog>
     </div>
@@ -174,6 +174,14 @@ interface Project {
     }
 }
 
+interface AxiosError {
+    response: {
+        data: {
+            message: string;
+        };
+    };
+}
+
 const newProjectDialog = ref(false);
 const newProjectName = ref('');
 const projects = ref([]);
@@ -212,8 +220,9 @@ const fetchAllProjects = async () => {
         const response = await axios.get('/project');
         projects.value = response.data;
     } catch (error) {
+        const axiosError = error as AxiosError;
         projects.value = [];
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się pobrać wszystkich projektów' });
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się pobrać wszystkich projektów' });
     }
     projectsLoading.value = false;
 }
@@ -224,8 +233,9 @@ const fetchMyProjects = async () => {
         const response = await axios.get('/project/my');
         projects.value = response.data;
     } catch (error) {
+        const axiosError = error as AxiosError;
         projects.value = [];
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się pobrać moich projektów' });
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się pobrać moich projektów' });
     }
     projectsLoading.value = false;
 }
@@ -236,8 +246,9 @@ const fetchSharedProjects = async () => {
         const response = await axios.get('/project/shared');
         projects.value = response.data;
     } catch (error) {
+        const axiosError = error as AxiosError;
         projects.value = [];
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się pobrać udostępnionych projektów' });
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się pobrać udostępnionych projektów' });
     }
     projectsLoading.value = false;
 }
@@ -248,8 +259,9 @@ const fetchArchiveProjects = async () => {
         const response = await axios.get('/project/archive');
         projects.value = response.data;
     } catch (error) {
+        const axiosError = error as AxiosError;
         projects.value = [];
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się pobrać archiwalnych projektów' });
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się pobrać archiwalnych projektów' });
     }
     projectsLoading.value = false;
 }
@@ -262,7 +274,8 @@ const saveNewProject = async () => {
         newProjectName.value = '';
         await fetchAllProjects();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się dodać nowego projektu' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się dodać nowego projektu' });
     }
 }   
 
@@ -274,7 +287,8 @@ const deleteProject = async () => {
         deleteProjectDialog.value = false;
         await fetchAllProjects();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się usunąć projektu' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się usunąć projektu' });
     } finally {
         deletingProject.value = false;
     }
@@ -286,7 +300,8 @@ const getProjectDetails = async (projectId: string) => {
         const response = await axios.get(`/project/${projectId}`);
         return response.data;
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się pobrać szczegółów projektu' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się pobrać szczegółów projektu' });
         return [];
     } finally {
         projectDetailsLoading.value = false;
@@ -300,7 +315,8 @@ const editProject = async () => {
         editProjectDialog.value = false;
         await fetchAllProjects();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się zaktualizować projektu' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się zaktualizować projektu' });
     }
 }
 
@@ -310,7 +326,8 @@ const removeUserFromShare = async (userEmail: string, projectId: string) => {
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Pomyślnie usunięto użytkownika z udostępnienia' });
         projectDetails.value = await getProjectDetails(projectId);
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się usunąć użytkownika z udostępnienia' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się usunąć użytkownika z udostępnienia' });
     }
 }
 
@@ -322,7 +339,8 @@ const shareProject = async () => {
         shareEmail.value = '';
         projectDetails.value = await getProjectDetails(actualProject.value.id);
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się udostępnić projektu' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się udostępnić projektu' });
     }
 }
 
@@ -332,7 +350,8 @@ const archiveProject = async (projectId: string) => {
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Pomyślnie zarchiwizowano projekt' });
         await fetchAllProjects();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się zarchiwizować projektu' });
+        const axiosError = error as AxiosError;
+        toast.add({ severity: 'error', summary: 'Błąd', detail: axiosError.response.data.message || 'Nie udało się zarchiwizować projektu' });
     }
 }
 

@@ -4,7 +4,7 @@ export default class ProjectService {
 
     static async createProject({ title }: { title: string }, userId: string) {
         if (!title) {
-            throw new Error("Title is required");
+            throw new Error("Tytuł jest wymagany");
         }
         const project = await prisma.project.create({
             data: {
@@ -139,7 +139,10 @@ export default class ProjectService {
     static async updateProject(projectId: string, { title, description, archived }: { title: string, description: string, archived: boolean }, userId: string) {
         const project = await this.getProjectIfUserHasRights(projectId, userId);
         if (!project) {
-            throw new Error("Project not found");
+            throw new Error("Projekt nie znaleziony");
+        }
+        if(project.userId !== userId) {
+            throw new Error("Nie masz uprawnień do aktualizacji tego projektu");
         }
         const updatedProject = await prisma.project.update({
             where: {
@@ -158,11 +161,11 @@ export default class ProjectService {
         const project = await this.getProjectIfUserHasRights(projectId, userId);
 
         if (!project) {
-            throw new Error("Project not found");
+            throw new Error("Projekt nie znaleziony");
         }
 
         if(project.userId !== userId) {
-            throw new Error("You do not have rights to delete this project");
+            throw new Error("Nie masz uprawnień do usunięcia tego projektu");
         }
 
         try {
@@ -173,20 +176,20 @@ export default class ProjectService {
             });
         }
         catch (error) {
-            throw new Error("Could not delete project");
+            throw new Error("Nie udało się usunąć projektu");
         }
     }
 
     static async shareProject(projectId: string, userEmail: string, userId: string) {
         const project = await this.getProjectIfUserHasRights(projectId, userId);
         if (!project) {
-            throw new Error("Project not found");
+            throw new Error("Projekt nie znaleziony");
         }
         if(project.userId !== userId) { 
-            throw new Error("You do not have rights to share this project");
+            throw new Error("Nie masz uprawnień do udostępnienia tego projektu");
         }
         if(project.sharedWith.some(user => user.email === userEmail)) {
-            throw new Error("Project already shared with this user");
+            throw new Error("Projekt już udostępniony temu użytkownikowi");
         }
         const user = await prisma.user.findFirst({
             where: {
@@ -194,10 +197,10 @@ export default class ProjectService {
             }
         });
         if (!user) {
-            throw new Error("User not found");
+            throw new Error("Użytkownik nie znaleziony");
         }
         if (user.id === userId) {
-            throw new Error("You cannot share a project with yourself");
+            throw new Error("Nie możesz udostępnić projektu samemu sobie");
         }
         await prisma.project.update({
             where: {
@@ -216,13 +219,13 @@ export default class ProjectService {
     static async unshareProject(projectId: string, userEmail: string, userId: string) {
         const project = await this.getProjectIfUserHasRights(projectId, userId);
         if (!project) {
-            throw new Error("Project not found");
+            throw new Error("Projekt nie znaleziony");
         }
         if(project.userId !== userId) { 
-            throw new Error("You do not have rights to unshare this project");
+            throw new Error("Nie masz uprawnień do usunięcia udostępnienia tego projektu");
         }
         if(!project.sharedWith.some(user => user.email === userEmail)) {
-            throw new Error("Project is not shared with this user");
+            throw new Error("Projekt nie jest udostępniony temu użytkownikowi");
         }
         const user = await prisma.user.findFirst({
             where: {
@@ -230,7 +233,7 @@ export default class ProjectService {
             }
         });
         if (!user) {
-            throw new Error("User not found");
+            throw new Error("Użytkownik nie znaleziony");
         }
         await prisma.project.update({
             where: {
