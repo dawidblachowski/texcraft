@@ -28,9 +28,10 @@
                     <Column header="Akcje">
                         <template #body="{ data }">
                             <div class="flex gap-2">
-                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-primary" @click="editProjectDialog=true;actualProject=data" />
+                                <Button icon="pi pi-pencil" class="p-button-rounded p-button-primary" @click="editProjectDialog=true; editProjectData={...data}" />
                                 <Button icon="pi pi-share-alt" class="p-button-rounded p-button-info" @click="shareProjectDialog=true;actualProject=data" />
                                 <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="deleteProjectDialog=true;actualProject=data" />
+                                <Button icon="pi pi-book" class="p-button-rounded p-button-warning" @click="archiveProject(data.id)" />
                             </div>
                         </template>
                     </Column>
@@ -76,14 +77,14 @@
                 </div>
             </div>
         </Dialog>
-        <Dialog header="Edytuj projekt" v-model:visible="editProjectDialog" :draggable="false" :modal="true" :closable="true" :closeOnEscape="true" v-if="actualProject">
+        <Dialog header="Edytuj projekt" v-model:visible="editProjectDialog" :draggable="false" :modal="true" :closable="true" :closeOnEscape="true" v-if="editProjectData">
             <div class="p-fluid">
                 <FloatLabel variant="in">
-                    <InputText fluid id="name" v-model="actualProject.title" />
+                    <InputText fluid id="name" v-model="editProjectData.title" />
                     <label for="name">Nazwa Projektu: </label>
                 </FloatLabel>
                 <FloatLabel variant="in" class="field mt-2">
-                    <Textarea v-model="actualProject.description" id="description" rows="5" cols="30" />
+                    <Textarea v-model="editProjectData.description" id="description" rows="5" cols="30" />
                     <label for="description">Opis Projektu: </label>
                 </FloatLabel>
                 <div class="field mt-2 flex justify-end">
@@ -182,6 +183,7 @@ const deleteProjectDialog = ref(false);
 const actualProject = ref<Project | null>(null);
 const deletingProject = ref(false);
 const editProjectDialog = ref(false);
+const editProjectData = ref<Project | null>(null); // Add this line
 const shareProjectDialog = ref(false);
 interface ProjectDetails {
     sharedWith: { email: string }[];
@@ -293,7 +295,7 @@ const getProjectDetails = async (projectId: string) => {
 
 const editProject = async () => {
     try {
-        await axios.put(`/project/${actualProject.value?.id}`, { title: actualProject.value?.title, description: actualProject.value?.description });
+        await axios.put(`/project/${editProjectData.value?.id}`, { title: editProjectData.value?.title, description: editProjectData.value?.description });
         toast.add({ severity: 'success', summary: 'Sukces', detail: 'Pomyślnie zaktualizowano projekt' });
         editProjectDialog.value = false;
         await fetchAllProjects();
@@ -321,6 +323,16 @@ const shareProject = async () => {
         projectDetails.value = await getProjectDetails(actualProject.value.id);
     } catch (error) {
         toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się udostępnić projektu' });
+    }
+}
+
+const archiveProject = async (projectId: string) => {
+    try {
+        await axios.put(`/project/${projectId}`, { archived: true });
+        toast.add({ severity: 'success', summary: 'Sukces', detail: 'Pomyślnie zarchiwizowano projekt' });
+        await fetchAllProjects();
+    } catch (error) {
+        toast.add({ severity: 'error', summary: 'Błąd', detail: 'Nie udało się zarchiwizować projektu' });
     }
 }
 
