@@ -116,7 +116,22 @@ export default class ProjectService {
                         }
                     }
                 ]
-            }
+            }, 
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true
+                    }
+                }, 
+                sharedWith: {
+                    select: {
+                        id: true,
+                        email: true
+                    }
+                },
+            }, 
+
         });
         return project;
     }
@@ -170,6 +185,9 @@ export default class ProjectService {
         if(project.userId !== userId) { 
             throw new Error("You do not have rights to share this project");
         }
+        if(project.sharedWith.some(user => user.email === userEmail)) {
+            throw new Error("Project already shared with this user");
+        }
         const user = await prisma.user.findFirst({
             where: {
                 email: userEmail
@@ -188,6 +206,39 @@ export default class ProjectService {
             data: {
                 sharedWith: {
                     connect: {
+                        id: user.id
+                    }
+                }
+            }
+        });
+    }
+
+    static async unshareProject(projectId: string, userEmail: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Project not found");
+        }
+        if(project.userId !== userId) { 
+            throw new Error("You do not have rights to unshare this project");
+        }
+        if(!project.sharedWith.some(user => user.email === userEmail)) {
+            throw new Error("Project is not shared with this user");
+        }
+        const user = await prisma.user.findFirst({
+            where: {
+                email: userEmail
+            }
+        });
+        if (!user) {
+            throw new Error("User not found");
+        }
+        await prisma.project.update({
+            where: {
+                id: projectId
+            },
+            data: {
+                sharedWith: {
+                    disconnect: {
                         id: user.id
                     }
                 }
