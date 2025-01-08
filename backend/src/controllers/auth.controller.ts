@@ -53,8 +53,8 @@ export default class AuthController {
                     res.cookie('refreshToken', tokens.refreshToken, {
                         httpOnly: true,
                         maxAge,
-                        secure: process.env.NODE_ENV === 'production',
-                        sameSite: 'none',
+                        secure: process.env.NODE_ENV === 'production' ? true : false, // Ensure this is false in development
+                        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Set sameSite to 'lax' in development
                     });
 
                     //and return access token
@@ -88,8 +88,8 @@ export default class AuthController {
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 maxAge,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'none',
+                secure: process.env.NODE_ENV === 'production' ? true : false, // Ensure this is false in development
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Set sameSite to 'lax' in development
             });
 
             //and return access token
@@ -136,8 +136,8 @@ export default class AuthController {
                 res.cookie('refreshToken', tokens.refreshToken, {
                     httpOnly: true,
                     maxAge,
-                    sameSite: 'none',
-                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Set sameSite to 'lax' in development
+                    secure: process.env.NODE_ENV === 'production' ? true : false, // Ensure this is false in development
                 });
 
                 // Return access token

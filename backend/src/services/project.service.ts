@@ -29,8 +29,10 @@ export default class ProjectService {
                     }
                 }
             },
-        },
-        );
+            orderBy: {
+                updatedAt: 'desc'
+            }
+        });
         return projects;
     }
 
@@ -51,6 +53,9 @@ export default class ProjectService {
                         email: true
                     }
                 }
+            },
+            orderBy: {
+                updatedAt: 'desc'
             }
         });
         return projects;
@@ -81,6 +86,9 @@ export default class ProjectService {
                         email: true
                     }
                 }
+            },
+            orderBy: {
+                updatedAt: 'desc'
             }
         });
         return projects;
@@ -89,7 +97,7 @@ export default class ProjectService {
     static async getAllProjects(userId: string) {
         const ownProjects = await this.getOwnProjects(userId);
         const sharedProjects = await this.getSharedProjects(userId);
-        return [...ownProjects, ...sharedProjects];
+        return [...ownProjects, ...sharedProjects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     }
 
     static async getProjectIfUserHasRights(projectId: string, userId: string) {
@@ -129,5 +137,28 @@ export default class ProjectService {
             }
         });
         return updatedProject;
+    }
+
+    static async deleteProject(projectId: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+
+        if (!project) {
+            throw new Error("Project not found");
+        }
+
+        if(project.userId !== userId) {
+            throw new Error("You do not have rights to delete this project");
+        }
+
+        try {
+            await prisma.project.delete({
+                where: {
+                    id: projectId
+                }
+            });
+        }
+        catch (error) {
+            throw new Error("Could not delete project");
+        }
     }
 }

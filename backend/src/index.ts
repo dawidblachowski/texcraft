@@ -21,9 +21,6 @@ async function main() {
   app.use('/api', apiRouter);
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
-  if (NODE_ENV === 'development') {
-    require('./config/swagger');
-  }
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

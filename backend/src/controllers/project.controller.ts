@@ -95,6 +95,9 @@ export class ProjectController {
     }
 
     static async deleteProject(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['Project']
+                #swagger.description = 'Delete a project by id'
+        */
         const projectId = req.params.id;
         if(!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
