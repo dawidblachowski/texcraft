@@ -75,6 +75,9 @@ export class ProjectController {
     }
 
     static async updateProject(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['Project']
+                #swagger.description = 'Update a project by id'
+        */
         const { title, description, archived } = req.body;
         const projectId = req.params.id;
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
@@ -91,7 +94,6 @@ export class ProjectController {
             }
             return;
         }
-
     }
 
     static async deleteProject(req: Request, res: Response, next: any) {
