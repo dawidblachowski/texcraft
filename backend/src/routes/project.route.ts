@@ -5,9 +5,8 @@ import { isAuthenticated } from "@/middlewares/isAuthenticated";
 const router = Router();
 
 router.get("/shared/", isAuthenticated, ProjectController.getSharedProjects);
-router.post("/share/:projectId/:userId", isAuthenticated, ProjectController.shareProject);
-router.delete("/share/:projectId/:userId", isAuthenticated, ProjectController.unshareProject);
-router.get("/shared/:userId", isAuthenticated, ProjectController.getSharedProjectsByUser);
+router.post("/share/:projectId/:userEmail", isAuthenticated, ProjectController.shareProject);
+router.delete("/share/:projectId/:userEmail", isAuthenticated, ProjectController.unshareProject);
 router.get("/archive", isAuthenticated, ProjectController.getArchivedProjects);
 router.get("/my", isAuthenticated, ProjectController.getMyProjects);
 router.get("/", isAuthenticated, ProjectController.getProjects);

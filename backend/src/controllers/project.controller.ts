@@ -135,15 +135,33 @@ export class ProjectController {
     }
 
     static async shareProject(req: Request, res: Response, next: any) {
-        res.send("Not Implemented6");
+        /*     #swagger.tags = ['Project']
+                #swagger.description = 'Share a project with a user'
+        */
+        const projectId = req.params.projectId;
+        const userEmail = req.params.userEmail;
+        if(!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
+        const userId = req.user.id;
+        if(!projectId || !userEmail) {
+            res.status(400).json({ message: "Invalid request" });
+            return;
+        }
+
+        try {
+            await ProjectService.shareProject(projectId, userEmail, userId);
+            res.status(200).json();
+        } catch (error) {
+            if (error instanceof Error) {
+                res.status(400).json({ message: error.message });
+            } else {
+                res.status(400).json({ message: "An unknown error occurred" });
+            }
+            return;
+        }
     }
 
     static async unshareProject(req: Request, res: Response, next: any) {
         res.send("Not Implemented7");
-    }
-
-    static async getSharedProjectsByUser(req: Request, res: Response, next: any) {
-        res.send("Not Implemented8");
     }
 
     static async getMyProjects(req: Request, res: Response, next: NextFunction) : Promise<void> {

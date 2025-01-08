@@ -161,4 +161,37 @@ export default class ProjectService {
             throw new Error("Could not delete project");
         }
     }
+
+    static async shareProject(projectId: string, userEmail: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Project not found");
+        }
+        if(project.userId !== userId) { 
+            throw new Error("You do not have rights to share this project");
+        }
+        const user = await prisma.user.findFirst({
+            where: {
+                email: userEmail
+            }
+        });
+        if (!user) {
+            throw new Error("User not found");
+        }
+        if (user.id === userId) {
+            throw new Error("You cannot share a project with yourself");
+        }
+        await prisma.project.update({
+            where: {
+                id: projectId
+            },
+            data: {
+                sharedWith: {
+                    connect: {
+                        id: user.id
+                    }
+                }
+            }
+        });
+    }
 }
