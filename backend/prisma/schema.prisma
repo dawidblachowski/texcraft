@@ -59,6 +59,20 @@ model Project {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   sharedWith User[]   @relation("SharedProjects")
+  files      File[]
 
   @@index([userId])
+}
+
+model File {
+  id        String   @id @default(uuid())
+  filename  String
+  filePath  String
+  mimeType  String?
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+  @@unique([projectId, filePath, filename])
 }

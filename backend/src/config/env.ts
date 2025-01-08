@@ -11,5 +11,8 @@ export const {
     
     OAUTH2_DISCOVERY_URL,
     OAUTH2_CLIENT_ID,
-    OAUTH2_CLIENT_SECRET
+    OAUTH2_CLIENT_SECRET,
+
+    DATA_FOLDER, 
+    MAX_FILE_SIZE
 } = process.env;

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import ProjectService from "@/services/project.service";
+import path from 'path';
 
 const handleError = (error: unknown, res: Response) => {
     if (error instanceof Error) {
@@ -178,6 +179,70 @@ export class ProjectController {
             const projects = await ProjectService.getArchivedProjects(userId);
             res.status(200).json(projects);
         } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async createTexFile(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Create a new text file in a project'
+        */
+        if(!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        const fileName = req.body.fileName;
+        const filePath = req.body.filePath;
+        try {
+            const file = await ProjectService.createTexFile(projectId, fileName, filePath, userId);
+            res.status(201).json(file);
+        }
+        catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async uploadFile(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Upload a file to a project'
+        */
+        if(!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        if (!req.file) {
+            res.status(400).json({ message: "No file uploaded" });
+            return;
+        }
+        const filePath = req.body.subPath ? path.join(req.body.subPath, req.file.originalname) : req.file.originalname;
+        try {
+            const file = await ProjectService.uploadFile(projectId, filePath, userId);
+            res.status(201).json(file);
+        }
+        catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async getFilesStructure(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Get the file structure of a project'
+        */
+        if(!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        try {
+            const structure = await ProjectService.getFilesStructure(projectId, userId);
+            res.status(200).json(structure);
+        }
+        catch (error) {
             handleError(error, res);
         }
     }

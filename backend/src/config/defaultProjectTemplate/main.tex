@@ -1,0 +1,72 @@
+\documentclass[a4paper,12pt]{article}
+
+% Pakiety
+\usepackage[utf8]{inputenc} % Kodowanie UTF-8
+\usepackage[T1]{fontenc}   % Kodowanie czcionki
+\usepackage{lmodern}       % Poprawione czcionki
+\usepackage{geometry}      % Ustawienia marginesów
+\geometry{margin=1in}      % Marginesy 1 cal
+\usepackage{graphicx}      % Wstawianie obrazków
+\usepackage{hyperref}      % Hiperłącza
+\usepackage{amsmath}       % Symbole matematyczne
+\usepackage{titlesec}      % Formatowanie sekcji
+
+% Metadane
+\title{Przykładowa Strona w LaTeX}
+\author{Jan Kowalski \and Maria Nowak}
+\date{\today}
+
+% Dokument
+\begin{document}
+
+% Strona tytułowa
+\maketitle
+\newpage
+
+% Spis treści
+\tableofcontents
+\newpage
+
+% Sekcja 1
+\section{Wprowadzenie}
+LaTeX jest systemem składu tekstu używanym do tworzenia profesjonalnych dokumentów. Ten szablon pokazuje, jak rozpocząć pracę.
+
+% Sekcja 2
+\section{Podstawy LaTeXa}
+\subsection{Tworzenie sekcji}
+Sekcje tworzy się za pomocą poleceń \texttt{\textbackslash section}, \texttt{\textbackslash subsection} i \texttt{\textbackslash subsubsection}. 
+
+\subsection{Matematyka}
+LaTeX umożliwia zapis równań matematycznych, np.:
+\begin{equation}
+E = mc^2
+\end{equation}
+
+% Sekcja 3
+\section{Obrazki i tabele}
+\subsection{Wstawianie obrazków}
+Aby wstawić obrazek, użyj:\newline
+\begin{verbatim}
+\includegraphics[width=\linewidth]{nazwa_pliku.png}
+\end{verbatim}
+
+\subsection{Tabele}
+Przykład tabeli:
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        Nagłówek 1 & Nagłówek 2 & Nagłówek 3 \\
+        \hline
+        A          & B          & C          \\
+        \hline
+    \end{tabular}
+    \caption{Przykładowa tabela}
+    \label{tab:example}
+\end{table}
+
+% Sekcja 4
+\section{Podsumowanie}
+Ten dokument prezentuje podstawowe możliwości LaTeXa. Więcej informacji można znaleźć w oficjalnej dokumentacji.
+
+\end{document}
