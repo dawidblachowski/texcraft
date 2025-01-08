@@ -1,6 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import ProjectService from "@/services/project.service";
 
+const handleError = (error: unknown, res: Response) => {
+    if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+    } else {
+        res.status(400).json({ message: "An unknown error occurred" });
+    }
+};
+
 export class ProjectController {
     static async getProjects(req: Request, res: Response, next: any) {
         /*     #swagger.tags = ['Project']
@@ -15,12 +23,7 @@ export class ProjectController {
             const projects = await ProjectService.getAllProjects(userId);
             res.status(200).json(projects);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -38,14 +41,7 @@ export class ProjectController {
             const project = await ProjectService.createProject({ title }, userId);
             res.status(201).json(project);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-        }
-        finally {
-            return;
+            handleError(error, res);
         }
     }
 
@@ -65,12 +61,7 @@ export class ProjectController {
             }
             res.status(200).json(project);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -87,12 +78,7 @@ export class ProjectController {
             const project = await ProjectService.updateProject(projectId, { title, description, archived }, userId);
             res.status(200).json(project);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -108,12 +94,7 @@ export class ProjectController {
             await ProjectService.deleteProject(projectId, userId);
             res.status(204).json();
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -127,12 +108,7 @@ export class ProjectController {
             const projects = await ProjectService.getSharedProjects(userId);
             res.status(200).json(projects);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -153,12 +129,7 @@ export class ProjectController {
             await ProjectService.shareProject(projectId, userEmail, userId);
             res.status(200).json();
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -179,12 +150,7 @@ export class ProjectController {
             await ProjectService.unshareProject(projectId, userEmail, userId);
             res.status(200).json();
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -198,12 +164,7 @@ export class ProjectController {
             const projects = await ProjectService.getOwnProjects(userId);
             res.status(200).json(projects);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
@@ -217,12 +178,7 @@ export class ProjectController {
             const projects = await ProjectService.getArchivedProjects(userId);
             res.status(200).json(projects);
         } catch (error) {
-            if (error instanceof Error) {
-                res.status(400).json({ message: error.message });
-            } else {
-                res.status(400).json({ message: "An unknown error occurred" });
-            }
-            return;
+            handleError(error, res);
         }
     }
 
