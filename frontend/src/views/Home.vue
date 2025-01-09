@@ -22,8 +22,16 @@
                             </template>
                         </Column>
                         <Column field="description" header="Opis" sortable></Column>
-                        <Column field="createdAt" header="Data utworzenia" sortable></Column>
-                        <Column field="updatedAt" header="Data modyfikacji" sortable></Column>
+                        <Column field="createdAt" header="Data utworzenia" sortable>
+                            <template #body="{ data }">
+                                {{ new Date(data.createdAt).toLocaleString('pl-PL') }}
+                            </template>
+                        </Column>
+                        <Column field="updatedAt" header="Data modyfikacji" sortable>
+                            <template #body="{ data }">
+                                {{ new Date(data.updatedAt).toLocaleString('pl-PL') }}
+                            </template>
+                        </Column>
                         <Column field="user.email" header="Właściciel" sortable></Column>
                         <Column header="Akcje">
                             <template #body="{ data }">
