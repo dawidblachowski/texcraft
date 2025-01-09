@@ -1,6 +1,7 @@
 import prisma from "@/config/database";
 import FilesService from "./files.service";
 import path from 'path';
+import sanitize from 'sanitize-filename';
 
 export default class ProjectService {
 
@@ -256,6 +257,14 @@ export default class ProjectService {
         if (!project) {
             throw new Error("Projekt nie znaleziony");
         }
+
+        fileName = sanitize(fileName);
+        filePath = sanitize(filePath);
+
+        if (filePath.includes('..')) {
+            throw new Error("Nieprawidłowa ścieżka pliku");
+        }
+
         try {
             await FilesService.createEmptyTexFile(filePath, projectId, fileName);
 
@@ -285,6 +294,13 @@ export default class ProjectService {
         if (!project) {
             throw new Error("Projekt nie znaleziony");
         }
+
+        filePath = sanitize(filePath);
+
+        if (filePath.includes('..')) {
+            throw new Error("Nieprawidłowa ścieżka pliku");
+        }
+
         try {
             const fileRecord = await prisma.file.create({
                 data: {

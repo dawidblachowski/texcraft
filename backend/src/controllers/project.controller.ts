@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import ProjectService from "@/services/project.service";
 import path from 'path';
+import sanitize from 'sanitize-filename';
 
 const handleError = (error: unknown, res: Response) => {
     if (error instanceof Error) {
@@ -187,19 +188,24 @@ export class ProjectController {
         /*     #swagger.tags = ['ProjectFile']
                 #swagger.description = 'Create a new text file in a project'
         */
-        if(!req.user) {
+        if (!req.user) {
             res.status(401).json({ message: "Unauthorized" });
             return;
         }
         const userId = req.user.id;
         const projectId = req.params.id;
-        const fileName = req.body.fileName;
-        const filePath = req.body.filePath;
+        const fileName = sanitize(req.body.fileName);
+        const filePath = sanitize(req.body.filePath);
+
+        if (filePath.includes('..')) {
+            res.status(400).json({ message: "Nieprawidłowa ścieżka pliku" });
+            return;
+        }
+
         try {
             const file = await ProjectService.createTexFile(projectId, fileName, filePath, userId);
             res.status(201).json(file);
-        }
-        catch (error) {
+        } catch (error) {
             handleError(error, res);
         }
     }
@@ -208,7 +214,7 @@ export class ProjectController {
         /*     #swagger.tags = ['ProjectFile']
                 #swagger.description = 'Upload a file to a project'
         */
-        if(!req.user) {
+        if (!req.user) {
             res.status(401).json({ message: "Unauthorized" });
             return;
         }
@@ -218,12 +224,17 @@ export class ProjectController {
             res.status(400).json({ message: "No file uploaded" });
             return;
         }
-        const filePath = req.body.subPath ? path.join(req.body.subPath, req.file.originalname) : req.file.originalname;
+        const filePath = sanitize(req.body.subPath ? path.join(req.body.subPath, req.file.originalname) : req.file.originalname);
+
+        if (filePath.includes('..')) {
+            res.status(400).json({ message: "Nieprawidłowa ścieżka pliku" });
+            return;
+        }
+
         try {
             const file = await ProjectService.uploadFile(projectId, filePath, userId);
             res.status(201).json(file);
-        }
-        catch (error) {
+        } catch (error) {
             handleError(error, res);
         }
     }
@@ -232,7 +243,7 @@ export class ProjectController {
         /*     #swagger.tags = ['ProjectFile']
                 #swagger.description = 'Get the file structure of a project'
         */
-        if(!req.user) {
+        if (!req.user) {
             res.status(401).json({ message: "Unauthorized" });
             return;
         }
@@ -241,8 +252,7 @@ export class ProjectController {
         try {
             const structure = await ProjectService.getFilesStructure(projectId, userId);
             res.status(200).json(structure);
-        }
-        catch (error) {
+        } catch (error) {
             handleError(error, res);
         }
     }

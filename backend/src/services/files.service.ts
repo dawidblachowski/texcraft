@@ -1,13 +1,21 @@
 import { DATA_FOLDER } from "../config/env";
 import fs from 'fs';
 import path from 'path';
+import sanitize from 'sanitize-filename';
 
 export default class FilesService {
-
     static async createEmptyTexFile(filePath: string, projectId: string, fileName: string) {
         if (DATA_FOLDER === undefined) {
             throw new Error('Folder danych nie jest zdefiniowany');
         }
+
+        fileName = sanitize(fileName);
+        filePath = sanitize(filePath);
+
+        if (filePath.includes('..')) {
+            throw new Error("Nieprawidłowa ścieżka pliku");
+        }
+
         const projectDir = path.join(DATA_FOLDER, projectId);
 
         if (!fs.existsSync(projectDir)) {
@@ -34,6 +42,13 @@ export default class FilesService {
         if (DATA_FOLDER === undefined) {
             throw new Error('Folder danych nie jest zdefiniowany');
         }
+
+        filePath = sanitize(filePath);
+
+        if (filePath.includes('..')) {
+            throw new Error("Nieprawidłowa ścieżka pliku");
+        }
+
         const projectDir = path.join(DATA_FOLDER, projectId);
         const endpath = path.join(projectDir, filePath);
         try {
@@ -46,5 +61,4 @@ export default class FilesService {
             }
         }
     }
-
 }
