@@ -7,12 +7,18 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Accordion: typeof import('primevue/accordion')['default']
+    AccordionContent: typeof import('primevue/accordioncontent')['default']
+    AccordionHeader: typeof import('primevue/accordionheader')['default']
+    AccordionPanel: typeof import('primevue/accordionpanel')['default']
+    AccordionTab: typeof import('primevue/accordiontab')['default']
     Button: typeof import('primevue/button')['default']
     Column: typeof import('primevue/column')['default']
     DarkThemeToggle: typeof import('./src/components/DarkThemeToggle.vue')['default']
     DataTable: typeof import('primevue/datatable')['default']
     Dialog: typeof import('primevue/dialog')['default']
     Divider: typeof import('primevue/divider')['default']
+    FileUpload: typeof import('primevue/fileupload')['default']
     FloatLabel: typeof import('primevue/floatlabel')['default']
     InputText: typeof import('primevue/inputtext')['default']
     LoginRegister: typeof import('./src/components/LoginRegister.vue')['default']
