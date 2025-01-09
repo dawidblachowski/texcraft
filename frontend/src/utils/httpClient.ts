@@ -1,53 +1,76 @@
-import axios from 'axios'
-import { useAuthStore } from '../stores/auth.store'
-import router from '../router'
+import axios, { AxiosError } from 'axios';
+import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import { useAuthStore } from '../stores/auth.store';
+import router from '../router';
+
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 const httpClient = axios.create({
-  baseURL: '/api', // Base server URL
-  timeout: 10000,  // Timeout duration
-})
+  baseURL: '/api', 
+  timeout: 10000, 
+});
+
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+const onRefreshed = (newToken: string): void => {
+  refreshSubscribers.forEach((callback) => callback(newToken));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (callback: (token: string) => void): void => {
+  refreshSubscribers.push(callback);
+};
 
 httpClient.interceptors.request.use(
-  (config) => {
-    // Get the access token from the store
-    const authStore = useAuthStore()
+  (config: InternalAxiosRequestConfig) => {
+    const authStore = useAuthStore();
     if (authStore.isAuthenticated && authStore.accessToken) {
-      config.headers.Authorization = `Bearer ${authStore.accessToken}`
+      config.headers.set('Authorization', `Bearer ${authStore.accessToken}`);
     }
-    return config
+    return config;
   },
-  (error) => {
-    return Promise.reject(error)
-  }
-)
+  (error: AxiosError) => Promise.reject(error)
+);
 
 httpClient.interceptors.response.use(
-  (response) => {
-    return response
-  },
-  async (error) => {
-    const authStore = useAuthStore()
-    const originalRequest = error.config
+  (response: AxiosResponse) => response,
+  async (error: AxiosError) => {
+    const authStore = useAuthStore();
+    const originalRequest = error.config as RetryableRequestConfig;
 
-    // If the error is due to an expired token and we haven't already retried
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      try {
-        // Refresh the token
-        await authStore.refreshToken()
-        // Retry the original request with the new token
-        originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
-        return httpClient(originalRequest)
-      } catch (refreshError) {
-        // Refresh failed, redirect to login
-        authStore.logout()
-        router.push('/login')
-        return Promise.reject(refreshError)
+      if (!isRefreshing) {
+        isRefreshing = true;
+        try {
+          await authStore.refreshToken();
+          const newToken = authStore.accessToken!;
+          onRefreshed(newToken); 
+          isRefreshing = false;
+        } catch (refreshError) {
+          isRefreshing = false;
+          authStore.logout();
+          router.push('/login');
+          return Promise.reject(refreshError);
+        }
       }
+
+      return new Promise<AxiosResponse>((resolve) => {
+        addRefreshSubscriber((newToken) => {
+          originalRequest._retry = true;
+          if (originalRequest.headers) {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          }
+          resolve(httpClient(originalRequest));
+        });
+      });
     }
 
-    return Promise.reject(error)
+    return Promise.reject(error);
   }
-)
+);
 
-export default httpClient
+export default httpClient;
