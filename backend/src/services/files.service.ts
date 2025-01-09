@@ -2,18 +2,18 @@ import { DATA_FOLDER } from "../config/env";
 import fs from 'fs';
 import path from 'path';
 import sanitize from 'sanitize-filename';
+import prisma from '../config/database';
 
 export default class FilesService {
-    static async createEmptyTexFile(filePath: string, projectId: string, fileName: string) {
+    static async createEmptyTexFile(parentId: string | null, projectId: string, fileName: string) {
         if (DATA_FOLDER === undefined) {
             throw new Error('Folder danych nie jest zdefiniowany');
         }
 
         fileName = sanitize(fileName);
-        filePath = sanitize(filePath);
 
-        if (filePath.includes('..')) {
-            throw new Error("Nieprawidłowa ścieżka pliku");
+        if (fileName.includes('..')) {
+            throw new Error("Nieprawidłowa nazwa pliku");
         }
 
         const projectDir = path.join(DATA_FOLDER, projectId);
@@ -22,16 +22,26 @@ export default class FilesService {
             fs.mkdirSync(projectDir, { recursive: true });
         }
 
-        const endpath = path.join(projectDir, filePath, fileName);
+        let dirPath = projectDir;
+        if (parentId) {
+            const parentDir = await prisma.file.findUnique({
+                where: { id: parentId },
+                select: { filename: true, parentId: true },
+            });
+
+            if (!parentDir) {
+                throw new Error("Nie znaleziono katalogu nadrzędnego");
+            }
+
+            dirPath = path.join(projectDir, parentDir.filename);
+        }
+
+        const endpath = path.join(dirPath, fileName);
         if (fs.existsSync(endpath)) {
             throw new Error(`Plik już istnieje`);
         }
 
         try {
-            const dir = path.dirname(endpath);
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
             fs.writeFileSync(endpath, '');
         } catch {
             throw new Error(`Nie udało się utworzyć pliku`);

@@ -195,22 +195,17 @@ export class ProjectController {
         const userId = req.user.id;
         const projectId = req.params.id;
 
-        let fileName, filePath;
+        let fileName, parentId;
         try {
             fileName = sanitize(req.body.fileName);
-            filePath = sanitize(req.body.filePath || "");
+            parentId = req.body.parentId || null;
         } catch (error) {
-            res.status(400).json({ message: "Invalid file name or path" });
-            return;
-        }
-
-        if (filePath.includes('..')) {
-            res.status(400).json({ message: "Nieprawidłowa ścieżka pliku" });
+            res.status(400).json({ message: "Invalid file name or parent ID" });
             return;
         }
 
         try {
-            const file = await ProjectService.createTexFile(projectId, fileName, filePath, userId);
+            const file = await ProjectService.createTexFile(projectId, fileName, parentId, userId);
             res.status(201).json(file);
         } catch (error) {
             handleError(error, res);
@@ -231,15 +226,11 @@ export class ProjectController {
             res.status(400).json({ message: "No file uploaded" });
             return;
         }
-        const filePath = sanitize(req.body.subPath ? path.join(req.body.subPath, req.file.originalname) : req.file.originalname);
-
-        if (filePath.includes('..')) {
-            res.status(400).json({ message: "Nieprawidłowa ścieżka pliku" });
-            return;
-        }
+        const fileName = sanitize(req.file.originalname);
+        const parentId = req.body.parentId || null;
 
         try {
-            const file = await ProjectService.uploadFile(projectId, filePath, userId);
+            const file = await ProjectService.uploadFile(projectId, parentId, fileName, userId);
             res.status(201).json(file);
         } catch (error) {
             handleError(error, res);
@@ -259,6 +250,67 @@ export class ProjectController {
         try {
             const structure = await ProjectService.getFilesStructure(projectId, userId);
             res.status(200).json(structure);
+        } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async createFolder(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Create a new folder in a project'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+
+        let folderName, folderPath;
+        try {
+            folderName = sanitize(req.body.folderName);
+            folderPath = sanitize(req.body.folderPath || "");
+        } catch (error) {
+            res.status(400).json({ message: "Invalid folder name or path" });
+            return;
+        }
+
+        if (folderPath.includes('..')) {
+            res.status(400).json({ message: "Nieprawidłowa ścieżka folderu" });
+            return;
+        }
+
+        try {
+            await ProjectService.createDirectory(projectId, folderName, folderPath, userId);
+            res.status(201).json({ message: "Folder utworzony" });
+        } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async createDirectory(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Create a new directory in a project'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+
+        let directoryName, parentId;
+        try {
+            directoryName = sanitize(req.body.directoryName);
+            parentId = req.body.parentId || null;
+        } catch (error) {
+            res.status(400).json({ message: "Invalid directory name or parent ID" });
+            return;
+        }
+
+        try {
+            await ProjectService.createDirectory(projectId, directoryName, parentId, userId);
+            res.status(201).json({ message: "Katalog utworzony" });
         } catch (error) {
             handleError(error, res);
         }

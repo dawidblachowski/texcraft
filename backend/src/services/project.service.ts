@@ -251,61 +251,74 @@ export default class ProjectService {
         });
     }
 
-    static async createTexFile(projectId:string, fileName:string, filePath:string, userId:string) {
+    static async createTexFile(projectId: string, fileName: string, parentId: string | null, userId: string) {
         const project = await this.getProjectIfUserHasRights(projectId, userId);
         if (!project) {
             throw new Error("Projekt nie znaleziony");
         }
         try {
-            await FilesService.createEmptyTexFile(filePath, projectId, fileName);
+            await FilesService.createEmptyTexFile(parentId, projectId, fileName);
 
             const fileRecord = await prisma.file.create({
                 data: {
                     filename: fileName,
-                    filePath,
+                    parentId,
                     mimeType: 'text/x-tex',
                     projectId,
                 },
             });
 
-            if(!fileRecord) {
-                //remove file if not created
-                await FilesService.removeFile(filePath, projectId);
+            if (!fileRecord) {
                 throw new Error("Nie udało się utworzyć pliku");
             }
-
-        }
-        catch (error) {
+        } catch (error) {
             throw new Error("Nie udało się utworzyć pliku");
         }
     }
 
-    static async uploadFile(projectId: string, filePath: string, userId: string) {
+    static async uploadFile(projectId: string, parentId: string | null, fileName: string, userId: string) {
         const project = await this.getProjectIfUserHasRights(projectId, userId);
         if (!project) {
             throw new Error("Projekt nie znaleziony");
         }
+
+        const extension = path.extname(fileName).toLowerCase();
+        let mimeType = 'application/octet-stream';
+
+        switch (extension) {
+            case '.jpg':
+            case '.jpeg':
+                mimeType = 'image/jpeg';
+                break;
+            case '.png':
+                mimeType = 'image/png';
+                break;
+            case '.pdf':
+                mimeType = 'application/pdf';
+                break;
+            case '.tex':
+                mimeType = 'text/x-tex';
+                break;
+            // Add more cases as needed
+        }
+
         try {
             const fileRecord = await prisma.file.create({
                 data: {
-                    filename: path.basename(filePath),
-                    filePath: path.dirname(filePath).replace(/^\./, ''),
-                    mimeType: 'application/octet-stream',
+                    filename: fileName,
+                    parentId,
+                    mimeType,
                     projectId,
                 },
             });
 
-            if(!fileRecord) {
-                //remove file if not created
-                await FilesService.removeFile(filePath, projectId);
+            if (!fileRecord) {
                 throw new Error("Nie udało się przesłać pliku");
             }
-        }
-        catch (error) {
-            if(error instanceof Error) {
+        } catch (error) {
+            if (error instanceof Error) {
                 throw new Error(`Nie udało się przesłać pliku: ${error.message}`);
-            }
-            else {
+            } else {
                 throw new Error("Nie udało się przesłać pliku");
             }
         }
@@ -318,10 +331,47 @@ export default class ProjectService {
         }
         const files = await prisma.file.findMany({
             where: {
-                projectId
-            }
+                projectId,
+            },
+            include: {
+                children: {
+                    include: {
+                        children: true,
+                    },
+                },
+            },
+            orderBy: [
+                { isDirectory: 'desc' },
+                { filename: 'asc' }
+            ]
         });
 
         return files;
+    }
+
+    static async createDirectory(projectId: string, directoryName: string, parentId: string | null, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Projekt nie znaleziony");
+        }
+        try {
+            await FilesService.createDirectory(projectId, directoryName);
+
+            const directoryRecord = await prisma.file.create({
+                data: {
+                    filename: directoryName,
+                    parentId,
+                    mimeType: null,
+                    projectId,
+                    isDirectory: true,
+                },
+            });
+
+            if (!directoryRecord) {
+                throw new Error("Nie udało się utworzyć katalogu");
+            }
+        } catch (error) {
+            throw new Error("Nie udało się utworzyć katalogu");
+        }
     }
 }
