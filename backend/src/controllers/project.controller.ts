@@ -194,8 +194,15 @@ export class ProjectController {
         }
         const userId = req.user.id;
         const projectId = req.params.id;
-        const fileName = sanitize(req.body.fileName);
-        const filePath = sanitize(req.body.filePath);
+
+        let fileName, filePath;
+        try {
+            fileName = sanitize(req.body.fileName);
+            filePath = sanitize(req.body.filePath || "");
+        } catch (error) {
+            res.status(400).json({ message: "Invalid file name or path" });
+            return;
+        }
 
         if (filePath.includes('..')) {
             res.status(400).json({ message: "Nieprawidłowa ścieżka pliku" });

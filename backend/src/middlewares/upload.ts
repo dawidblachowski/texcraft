@@ -2,31 +2,36 @@
 import fs from 'fs';
 import path from 'path';
 import multer, { FileFilterCallback } from 'multer';
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { DATA_FOLDER } from '../config/env';
 import { MAX_FILE_SIZE } from '../config/env';
 import FilesService from '@/services/files.service';
 
 const storage = multer.diskStorage({
-  destination: (req: Request, file, cb) => {
-    const { projectId } = req.params;
+  destination: async (req: Request, file, cb) => {
+    const { id } = req.params;
     const subPath = (req.body.subPath || '').toString();
 
-    if (!projectId) {
+    if (!id) {
       return cb(new Error('Brak ID projektu'), '');
     }
 
-    if(DATA_FOLDER === undefined) {
-        return cb(new Error('Brak folderu danych'), '');
+    if (DATA_FOLDER === undefined) {
+      return cb(new Error('Brak folderu danych'), '');
     }
-    const dir = path.join(DATA_FOLDER, projectId, subPath);
 
-    fs.mkdirSync(dir, { recursive: true });
-
-    cb(null, dir);
+    try {
+      const dir = await FilesService.createDirectory(id, subPath);
+      cb(null, dir);
+    } catch (error) {
+      cb(error as Error, '');
+    }
   },
   filename: (req: Request, file, cb) => {
-    cb(null, file.originalname);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    const basename = path.basename(file.originalname, extension);
+    cb(null, `${basename}-${uniqueSuffix}${extension}`);
   },
 });
 
@@ -42,4 +47,14 @@ export const upload = multer({
     storage,
     fileFilter,
     limits: { fileSize: MAX_FILE_SIZE ? parseInt(MAX_FILE_SIZE) : 5 * 1024 * 1024 }, // 5MB limit
-});
+}).single('file');
+
+export const handleUploadErrors = (err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof multer.MulterError) {
+    res.status(400).json({ message: `Multer error: ${err.message}` });
+  } else if (err) {
+    res.status(400).json({ message: `Upload error: ${err.message}` });
+  } else {
+    next();
+  }
+};

@@ -14,6 +14,7 @@ declare module 'vue' {
     AccordionTab: typeof import('primevue/accordiontab')['default']
     Button: typeof import('primevue/button')['default']
     Column: typeof import('primevue/column')['default']
+    ContextMenu: typeof import('primevue/contextmenu')['default']
     DarkThemeToggle: typeof import('./src/components/DarkThemeToggle.vue')['default']
     DataTable: typeof import('primevue/datatable')['default']
     Dialog: typeof import('primevue/dialog')['default']

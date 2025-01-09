@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ProjectController } from "@/controllers/project.controller";
 import { isAuthenticated } from "@/middlewares/isAuthenticated";
-import { upload } from "@/middlewares/upload";
+import { upload, handleUploadErrors } from "@/middlewares/upload";
 
 const router = Router();
 
@@ -14,12 +14,11 @@ router.get("/", isAuthenticated, ProjectController.getProjects);
 router.post("/", isAuthenticated, ProjectController.createProject);
 
 router.post("/:id/files/tex", isAuthenticated, ProjectController.createTexFile);
-router.post("/:id/files/upload", isAuthenticated, upload.single('file'), ProjectController.uploadFile);
+router.post("/:id/files/upload", isAuthenticated, upload, handleUploadErrors, ProjectController.uploadFile);
 router.get("/:id/files/structure", isAuthenticated, ProjectController.getFilesStructure);
 
 router.get("/:id", isAuthenticated, ProjectController.getProject);
 router.put("/:id", isAuthenticated, ProjectController.updateProject);
 router.delete("/:id", isAuthenticated, ProjectController.deleteProject);
-
 
 export default router;

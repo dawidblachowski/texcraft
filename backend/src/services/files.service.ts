@@ -61,4 +61,18 @@ export default class FilesService {
             }
         }
     }
+
+    static async createDirectory(projectId: string, subPath: string) {
+        if (DATA_FOLDER === undefined) {
+            throw new Error('Folder danych nie jest zdefiniowany');
+        }
+
+        const dir = path.join(DATA_FOLDER, projectId, sanitize(subPath));
+
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+
+        return dir;
+    }
 }
