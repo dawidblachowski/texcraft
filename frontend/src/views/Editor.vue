@@ -28,7 +28,9 @@
           <div v-if="!selectedFile || Object.keys(selectedFile).length === 0">
             Najpierw wybierz plik!
           </div>
-          <div id="editor" class="editor"></div>
+          <div v-else>
+            <MonacoEditor :fileId="Object.keys(selectedFile)[0]" :projectId="projectId" :socket="socket" />
+          </div>
         </SplitterPanel>
 
         <!-- PDF Viewer Panel -->
@@ -123,7 +125,7 @@ import httpClient from "../utils/httpClient";
 import { useRoute } from "vue-router";
 import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/auth.store";
-
+import MonacoEditor from "../components/MonacoEditor.vue";
 
 interface File {
   id: string;
@@ -171,20 +173,8 @@ socket.on('connect', () => {
     fileTree.value = files;
     filesLoading.value = false;
   });
-});
-
-// const getFileTree = async () => {
-//   filesLoading.value = true;
-//   try {
-//     const response = await httpClient.get(`/project/${projectId}/files/structure`);
-//     fileTree.value = response.data;
-//   } finally {
-//     filesLoading.value = false;
-//   }
-// };
 
 onMounted(async () => {
-  // await getFileTree();
 });
 
 const renderProject = () => {
@@ -214,7 +204,6 @@ const createNewFile = async () => {
         fileName: newFileName.value,
         filePath: selectedFile.value ? selectedFile.value.key : "",
       });
-      // await getFileTree();
       toast.add({
         severity: "success",
         summary: "Sukces",
@@ -240,7 +229,6 @@ const createNewDirectory = async () => {
         directoryName: newDirectoryName.value,
         directoryPath: selectedFile.value ? selectedFile.value.key : "",
       });
-      // await getFileTree();
       toast.add({
         severity: "success",
         summary: "Sukces",
@@ -284,7 +272,6 @@ const uploadFile = async () => {
       detail: "Plik został przesłany!",
       life: 3000,
     });
-    // await getFileTree();
     uploadedFile.value = null;
     newFileDialogVisible.value = false;
   } catch (error) {

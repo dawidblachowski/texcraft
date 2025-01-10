@@ -4,6 +4,7 @@ import path from 'path';
 import sanitize from 'sanitize-filename';
 import prisma from '../config/database';
 import logger from "@/config/logger";
+import { File } from "@prisma/client";
 
 export default class FilesService {
     static async createEmptyTexFile(parentId: string | null, projectId: string, fileName: string) {
@@ -105,6 +106,54 @@ export default class FilesService {
             logger.error(`Failed to get files structure for project ${projectId}: ${error}`);
             throw new Error(`Failed to get files structure for project ${projectId}`);
         }
+    }
+
+    static async getFileById(fileId: string) {
+        try {
+            const file = await prisma.file.findUnique({
+                where: { id: fileId },
+            });
+            return file;
+        } catch (error) {
+            logger.error(`Failed to get file by id ${fileId}: ${error}`);
+            throw new Error(`Failed to get file by id ${fileId}`);
+        }
+    }
+    
+    static async getFileContent(projectId: string, filePath: string) {
+        if (DATA_FOLDER === undefined) {
+            throw new Error('Folder danych nie jest zdefiniowany');
+        }
+
+        const file = path.join(DATA_FOLDER, projectId, filePath);
+
+        if (!fs.existsSync(file)) {
+            throw new Error('Plik nie istnieje');
+        }
+
+        try {
+            const content = fs.readFileSync(file, 'utf8');
+            return content;
+        } catch (error) {
+            logger.error(`Failed to get content of file at ${file}: ${error}`);
+            throw new Error(`Failed to get content of file at ${file}`);
+        }
+    }
+
+    static async getFilePathFromFile(file: File): Promise<string> {
+        if (file.parentId === null) {
+            return file.filename;
+        }
+
+        const parentDir = await prisma.file.findUnique({
+            where: { id: file.parentId },
+        });
+
+        if (!parentDir) {
+            throw new Error("Nie znaleziono katalogu nadrzędnego");
+        }
+
+        return path.join(await this.getFilePathFromFile(parentDir), file.filename);
     }
 
 }

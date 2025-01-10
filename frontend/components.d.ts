@@ -25,6 +25,7 @@ declare module 'vue' {
     InputText: typeof import('primevue/inputtext')['default']
     LoginRegister: typeof import('./src/components/LoginRegister.vue')['default']
     Message: typeof import('primevue/message')['default']
+    MonacoEditor: typeof import('./src/components/MonacoEditor.vue')['default']
     OAuth2Callback: typeof import('./src/components/OAuth2Callback.vue')['default']
     Password: typeof import('primevue/password')['default']
     Register: typeof import('./src/components/Register.vue')['default']
