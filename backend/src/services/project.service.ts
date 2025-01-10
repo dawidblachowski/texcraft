@@ -1,6 +1,7 @@
 import prisma from "@/config/database";
 import FilesService from "./files.service";
 import path from 'path';
+import logger from "@/config/logger";
 
 export default class ProjectService {
 
@@ -14,6 +15,7 @@ export default class ProjectService {
                 userId
             },
         });
+        logger.info(`Created project with title: ${title} for user: ${userId}`);
         return project;
     }
 
@@ -35,6 +37,7 @@ export default class ProjectService {
                 updatedAt: 'desc'
             }
         });
+        logger.info(`Fetched own projects for user: ${userId}`);
         return projects;
     }
 
@@ -60,6 +63,7 @@ export default class ProjectService {
                 updatedAt: 'desc'
             }
         });
+        logger.info(`Fetched shared projects for user: ${userId}`);
         return projects;
     }
 
@@ -93,12 +97,14 @@ export default class ProjectService {
                 updatedAt: 'desc'
             }
         });
+        logger.info(`Fetched archived projects for user: ${userId}`);
         return projects;
     }
 
     static async getAllProjects(userId: string) {
         const ownProjects = await this.getOwnProjects(userId);
         const sharedProjects = await this.getSharedProjects(userId);
+        logger.info(`Fetched all projects for user: ${userId}`);
         return [...ownProjects, ...sharedProjects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     }
 
@@ -135,6 +141,7 @@ export default class ProjectService {
             }, 
 
         });
+        logger.info(`Fetched project: ${projectId} for user: ${userId}`);
         return project;
     }
 
@@ -156,6 +163,7 @@ export default class ProjectService {
                 archived
             }
         });
+        logger.info(`Updated project: ${projectId} for user: ${userId}`);
         return updatedProject;
     }
 
@@ -176,8 +184,10 @@ export default class ProjectService {
                     id: projectId
                 }
             });
+            logger.info(`Deleted project: ${projectId} for user: ${userId}`);
         }
         catch (error) {
+            logger.error(`Failed to delete project: ${projectId} for user: ${userId}`);
             throw new Error("Nie udało się usunąć projektu");
         }
     }
@@ -216,6 +226,7 @@ export default class ProjectService {
                 }
             }
         });
+        logger.info(`Shared project: ${projectId} with user: ${userEmail} by user: ${userId}`);
     }
 
     static async unshareProject(projectId: string, userEmail: string, userId: string) {
@@ -249,6 +260,7 @@ export default class ProjectService {
                 }
             }
         });
+        logger.info(`Unshared project: ${projectId} with user: ${userEmail} by user: ${userId}`);
     }
 
     static async createTexFile(projectId: string, fileName: string, parentId: string | null, userId: string) {
@@ -271,7 +283,9 @@ export default class ProjectService {
             if (!fileRecord) {
                 throw new Error("Nie udało się utworzyć pliku");
             }
+            logger.info(`Created TeX file: ${fileName} in project: ${projectId} by user: ${userId}`);
         } catch (error) {
+            logger.error(`Failed to create TeX file: ${fileName} in project: ${projectId} by user: ${userId}`);
             throw new Error("Nie udało się utworzyć pliku");
         }
     }
@@ -315,10 +329,13 @@ export default class ProjectService {
             if (!fileRecord) {
                 throw new Error("Nie udało się przesłać pliku");
             }
+            logger.info(`Uploaded file: ${fileName} to project: ${projectId} by user: ${userId}`);
         } catch (error) {
             if (error instanceof Error) {
+                logger.error(`Failed to upload file: ${fileName} to project: ${projectId} by user: ${userId} - ${error.message}`);
                 throw new Error(`Nie udało się przesłać pliku: ${error.message}`);
             } else {
+                logger.error(`Failed to upload file: ${fileName} to project: ${projectId} by user: ${userId} - Unknown error`);
                 throw new Error("Nie udało się przesłać pliku");
             }
         }
@@ -345,7 +362,7 @@ export default class ProjectService {
                 { filename: 'asc' }
             ]
         });
-
+        logger.info(`Fetched file structure for project: ${projectId} by user: ${userId}`);
         return files;
     }
 
@@ -370,7 +387,9 @@ export default class ProjectService {
             if (!directoryRecord) {
                 throw new Error("Nie udało się utworzyć katalogu");
             }
+            logger.info(`Created directory: ${directoryName} in project: ${projectId} by user: ${userId}`);
         } catch (error) {
+            logger.error(`Failed to create directory: ${directoryName} in project: ${projectId} by user: ${userId}`);
             throw new Error("Nie udało się utworzyć katalogu");
         }
     }

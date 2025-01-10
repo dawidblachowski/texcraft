@@ -2,11 +2,14 @@ import { Request, Response, NextFunction } from "express";
 import ProjectService from "@/services/project.service";
 import path from 'path';
 import sanitize from 'sanitize-filename';
+import logger from "@/config/logger";
 
 const handleError = (error: unknown, res: Response) => {
     if (error instanceof Error) {
+        logger.error(error.message);
         res.status(400).json({ message: error.message });
     } else {
+        logger.error("An unknown error occurred");
         res.status(400).json({ message: "An unknown error occurred" });
     }
 };
@@ -21,6 +24,7 @@ export class ProjectController {
             return;
         }
         const userId = req.user.id;
+        logger.info(`Fetching all projects for user: ${userId}`);
         try {
             const projects = await ProjectService.getAllProjects(userId);
             res.status(200).json(projects);
@@ -39,6 +43,7 @@ export class ProjectController {
             return;
         }
         const userId = req.user.id;
+        logger.info(`Creating project for user: ${userId} with title: ${title}`);
         try {
             const project = await ProjectService.createProject({ title }, userId);
             res.status(201).json(project);
@@ -54,6 +59,7 @@ export class ProjectController {
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
         const projectId = req.params.id;
+        logger.info(`Fetching project: ${projectId} for user: ${userId}`);
 
         try {
             const project = await ProjectService.getProjectIfUserHasRights(projectId, userId);
@@ -75,6 +81,7 @@ export class ProjectController {
         const projectId = req.params.id;
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
+        logger.info(`Updating project: ${projectId} for user: ${userId}`);
 
         try {
             const project = await ProjectService.updateProject(projectId, { title, description, archived }, userId);
@@ -91,6 +98,7 @@ export class ProjectController {
         const projectId = req.params.id;
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
+        logger.info(`Deleting project: ${projectId} for user: ${userId}`);
 
         try {
             await ProjectService.deleteProject(projectId, userId);
@@ -106,6 +114,7 @@ export class ProjectController {
         */
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
+        logger.info(`Fetching shared projects for user: ${userId}`);
         try {
             const projects = await ProjectService.getSharedProjects(userId);
             res.status(200).json(projects);
@@ -126,6 +135,7 @@ export class ProjectController {
             res.status(400).json({ message: "Invalid request" });
             return;
         }
+        logger.info(`Sharing project: ${projectId} with user: ${userEmail} by user: ${userId}`);
 
         try {
             await ProjectService.shareProject(projectId, userEmail, userId);
@@ -147,6 +157,7 @@ export class ProjectController {
             res.status(400).json({ message: "Invalid request" });
             return;
         }
+        logger.info(`Unsharing project: ${projectId} with user: ${userEmail} by user: ${userId}`);
 
         try {
             await ProjectService.unshareProject(projectId, userEmail, userId);
@@ -162,6 +173,7 @@ export class ProjectController {
         */
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
+        logger.info(`Fetching owned projects for user: ${userId}`);
         try {
             const projects = await ProjectService.getOwnProjects(userId);
             res.status(200).json(projects);
@@ -176,6 +188,7 @@ export class ProjectController {
         */
         if (!req.user) { res.status(401).json({ message: "Unauthorized" }); return; }
         const userId = req.user.id;
+        logger.info(`Fetching archived projects for user: ${userId}`);
         try {
             const projects = await ProjectService.getArchivedProjects(userId);
             res.status(200).json(projects);
@@ -203,6 +216,7 @@ export class ProjectController {
             res.status(400).json({ message: "Invalid file name or parent ID" });
             return;
         }
+        logger.info(`Creating text file: ${fileName} in project: ${projectId} by user: ${userId}`);
 
         try {
             const file = await ProjectService.createTexFile(projectId, fileName, parentId, userId);
@@ -228,6 +242,7 @@ export class ProjectController {
         }
         const fileName = sanitize(req.file.originalname);
         const parentId = req.body.parentId || null;
+        logger.info(`Uploading file: ${fileName} to project: ${projectId} by user: ${userId}`);
 
         try {
             const file = await ProjectService.uploadFile(projectId, parentId, fileName, userId);
@@ -247,6 +262,7 @@ export class ProjectController {
         }
         const userId = req.user.id;
         const projectId = req.params.id;
+        logger.info(`Fetching file structure for project: ${projectId} by user: ${userId}`);
         try {
             const structure = await ProjectService.getFilesStructure(projectId, userId);
             res.status(200).json(structure);
@@ -279,6 +295,7 @@ export class ProjectController {
             res.status(400).json({ message: "Nieprawidłowa ścieżka folderu" });
             return;
         }
+        logger.info(`Creating folder: ${folderName} in project: ${projectId} by user: ${userId}`);
 
         try {
             await ProjectService.createDirectory(projectId, folderName, folderPath, userId);
@@ -307,6 +324,7 @@ export class ProjectController {
             res.status(400).json({ message: "Invalid directory name or parent ID" });
             return;
         }
+        logger.info(`Creating directory: ${directoryName} in project: ${projectId} by user: ${userId}`);
 
         try {
             await ProjectService.createDirectory(projectId, directoryName, parentId, userId);

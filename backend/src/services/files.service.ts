@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import sanitize from 'sanitize-filename';
 import prisma from '../config/database';
+import logger from "@/config/logger";
 
 export default class FilesService {
     static async createEmptyTexFile(parentId: string | null, projectId: string, fileName: string) {
@@ -43,7 +44,9 @@ export default class FilesService {
 
         try {
             fs.writeFileSync(endpath, '');
+            logger.info(`Created empty TeX file at ${endpath}`);
         } catch {
+            logger.error(`Failed to create file at ${endpath}`);
             throw new Error(`Nie udało się utworzyć pliku`);
         }
     }
@@ -63,10 +66,13 @@ export default class FilesService {
         const endpath = path.join(projectDir, filePath);
         try {
             fs.unlinkSync(endpath);
+            logger.info(`Removed file at ${endpath}`);
         } catch (error) {
             if (error instanceof Error) {
+                logger.error(`Failed to remove file at ${endpath}: ${error.message}`);
                 throw new Error(`Failed to remove file at ${endpath}: ${error.message}`);
             } else {
+                logger.error(`Failed to remove file at ${endpath}: Unknown error`);
                 throw new Error(`Failed to remove file at ${endpath}: Unknown error`);
             }
         }
@@ -81,6 +87,7 @@ export default class FilesService {
 
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
+            logger.info(`Created directory at ${dir}`);
         }
 
         return dir;

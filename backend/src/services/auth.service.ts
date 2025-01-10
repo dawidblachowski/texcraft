@@ -1,6 +1,7 @@
 import prisma from "@/config/database";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import logger from "@/config/logger";
 
 import emailValidator from "../validators/email.validator";
 import passwordValidator from "../validators/password.validator";
@@ -60,9 +61,10 @@ export default class AuthService {
                 }
             }
         }); 
-        
+        logger.info(`User registered with email: ${email}`);
         return newUser;
     }
+
     static async generateNewTokens(user: User) {
         const accessToken = await this.generateAccessToken(user);
         const refreshToken = await this.generateRefreshToken(user);
@@ -74,7 +76,7 @@ export default class AuthService {
                 userId: user.id
             }
         });
-
+        logger.info(`Generated new tokens for user: ${user.email}`);
         return { accessToken, refreshToken };
     }
 
@@ -83,6 +85,7 @@ export default class AuthService {
             throw new Error("JWT_ACCESS_SECRET is not defined");
         }
         const token = jwt.sign({ id: user.id }, JWT_ACCESS_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES_IN });
+        logger.info(`Generated access token for user: ${user.email}`);
         return token;
     }
 
@@ -91,6 +94,7 @@ export default class AuthService {
             throw new Error("JWT_REFRESH_SECRET is not defined");
         }
         const token = jwt.sign({ id: user.id }, JWT_REFRESH_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRES_IN });
+        logger.info(`Generated refresh token for user: ${user.email}`);
         return token;
     }
 
@@ -106,6 +110,7 @@ export default class AuthService {
             const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { id: string };
             userId = decoded.id;
         } catch (e) {
+            logger.warn(`Invalid refresh token: ${refreshToken}`);
             throw new Error("Invalid refresh token");
         }
 
@@ -116,6 +121,7 @@ export default class AuthService {
             }
         });
         if (!dbToken) {
+            logger.warn(`Refresh token not found in database: ${refreshToken}`);
             throw new Error("Invalid refresh token");
         }
 
@@ -126,6 +132,7 @@ export default class AuthService {
             }
         });
         if (!user) {
+            logger.warn(`User not found for refresh token: ${refreshToken}`);
             throw new Error("User not found");
         }
 
@@ -142,7 +149,7 @@ export default class AuthService {
                 token: newRefreshToken
             }
         });
-
+        logger.info(`Refreshed tokens for user: ${user.email}`);
         return { accessToken, refreshToken: newRefreshToken };
     }
 

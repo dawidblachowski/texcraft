@@ -1,3 +1,4 @@
 node_modules
 src/config/swagger-output.json
 data
+app.log
