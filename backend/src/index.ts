@@ -9,6 +9,9 @@ import './config/passport';
 import { initOAuth2Strategy } from './config/passport';
 import { Request, Response, NextFunction } from 'express';
 import logger from './config/logger';
+import { Server } from 'socket.io';
+import http from 'http';
+import { configureSocketIO } from './config/socket-setup';
 
 async function main() {
   const app = express();
@@ -23,13 +26,27 @@ async function main() {
     next();
   });
 
+  const server = http.createServer(app);
+  const io = new Server(server, {
+    cors: {
+      origin: '*',
+    },
+  });
+
+  configureSocketIO(io);
+  // Middleware to store io in req object
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    req.io = io;
+    next();
+  });
+
   app.use('/api', apiRouter);
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
-
-
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  
+  server.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT}`);
   });
+
 }
 
 main().catch((error) => {

@@ -220,6 +220,12 @@ export class ProjectController {
 
         try {
             const file = await ProjectService.createTexFile(projectId, fileName, parentId, userId);
+            // Emit socket event
+            if (req.io) {
+                const files = await ProjectService.getFilesStructure(projectId, userId);
+                req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
+                logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
+            }
             res.status(201).json(file);
         } catch (error) {
             handleError(error, res);
@@ -246,6 +252,12 @@ export class ProjectController {
 
         try {
             const file = await ProjectService.uploadFile(projectId, parentId, fileName, userId);
+            // Emit socket event
+            if (req.io) {
+                const files = await ProjectService.getFilesStructure(projectId, userId);
+                req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
+                logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
+            }
             res.status(201).json(file);
         } catch (error) {
             handleError(error, res);
@@ -265,45 +277,53 @@ export class ProjectController {
         logger.info(`Fetching file structure for project: ${projectId} by user: ${userId}`);
         try {
             const structure = await ProjectService.getFilesStructure(projectId, userId);
+            // Emit socket event
+            
             res.status(200).json(structure);
         } catch (error) {
             handleError(error, res);
         }
     }
 
-    static async createFolder(req: Request, res: Response, next: any) {
-        /*     #swagger.tags = ['ProjectFile']
-                #swagger.description = 'Create a new folder in a project'
-        */
-        if (!req.user) {
-            res.status(401).json({ message: "Unauthorized" });
-            return;
-        }
-        const userId = req.user.id;
-        const projectId = req.params.id;
+    // static async createFolder(req: Request, res: Response, next: any) {
+    //     /*     #swagger.tags = ['ProjectFile']
+    //             #swagger.description = 'Create a new folder in a project'
+    //     */
+    //     if (!req.user) {
+    //         res.status(401).json({ message: "Unauthorized" });
+    //         return;
+    //     }
+    //     const userId = req.user.id;
+    //     const projectId = req.params.id;
 
-        let folderName, folderPath;
-        try {
-            folderName = sanitize(req.body.folderName);
-            folderPath = sanitize(req.body.folderPath || "");
-        } catch (error) {
-            res.status(400).json({ message: "Invalid folder name or path" });
-            return;
-        }
+    //     let folderName, folderPath;
+    //     try {
+    //         folderName = sanitize(req.body.folderName);
+    //         folderPath = sanitize(req.body.folderPath || "");
+    //     } catch (error) {
+    //         res.status(400).json({ message: "Invalid folder name or path" });
+    //         return;
+    //     }
 
-        if (folderPath.includes('..')) {
-            res.status(400).json({ message: "Nieprawidłowa ścieżka folderu" });
-            return;
-        }
-        logger.info(`Creating folder: ${folderName} in project: ${projectId} by user: ${userId}`);
+    //     if (folderPath.includes('..')) {
+    //         res.status(400).json({ message: "Nieprawidłowa ścieżka folderu" });
+    //         return;
+    //     }
+    //     logger.info(`Creating folder: ${folderName} in project: ${projectId} by user: ${userId}`);
 
-        try {
-            await ProjectService.createDirectory(projectId, folderName, folderPath, userId);
-            res.status(201).json({ message: "Folder utworzony" });
-        } catch (error) {
-            handleError(error, res);
-        }
-    }
+    //     try {
+    //         await ProjectService.createDirectory(projectId, folderName, folderPath, userId);
+    //         // Emit socket event
+    //         if (req.io) {
+    //             const files = await ProjectService.getFilesStructure(projectId, userId);
+    //             req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
+    //             logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
+    //         }
+    //         res.status(201).json({ message: "Folder utworzony" });
+    //     } catch (error) {
+    //         handleError(error, res);
+    //     }
+    // }
 
     static async createDirectory(req: Request, res: Response, next: any) {
         /*     #swagger.tags = ['ProjectFile']
@@ -328,6 +348,12 @@ export class ProjectController {
 
         try {
             await ProjectService.createDirectory(projectId, directoryName, parentId, userId);
+            // Emit socket event
+            if (req.io) {
+                const files = await ProjectService.getFilesStructure(projectId, userId);
+                req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
+                logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
+            }
             res.status(201).json({ message: "Katalog utworzony" });
         } catch (error) {
             handleError(error, res);

@@ -1,10 +1,12 @@
 import 'express';
+import { User as PrismaUser } from '@prisma/client';
 
 declare global {
     namespace Express {
-        interface User {
-            id: string;
-            email: string;
+        interface User extends PrismaUser {}
+        interface Request extends Express.Request {
+            user?: User;
+            io?: import('socket.io').Server;
         }
     }
 }

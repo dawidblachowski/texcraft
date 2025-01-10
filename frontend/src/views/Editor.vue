@@ -27,7 +27,6 @@
         <SplitterPanel class="flex" :size="40">
           <div v-if="!selectedFile || Object.keys(selectedFile).length === 0">
             Najpierw wybierz plik!
-            {{ fileTree }}
           </div>
           <div id="editor" class="editor"></div>
         </SplitterPanel>
@@ -116,12 +115,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useToast } from "primevue/usetoast";
 import TopBar from "../components/TopBar.vue";
 import FileTreeSkeleton from "../components/FileTreeSkeleton.vue";
 import httpClient from "../utils/httpClient";
 import { useRoute } from "vue-router";
+import { io } from "socket.io-client";
+import { useAuthStore } from "../stores/auth.store";
+
 
 interface File {
   id: string;
@@ -151,18 +153,38 @@ const newFileName = ref("");
 const newDirectoryName = ref("");
 const filesLoading = ref(true);
 
-const getFileTree = async () => {
-  filesLoading.value = true;
-  try {
-    const response = await httpClient.get(`/project/${projectId}/files/structure`);
-    fileTree.value = response.data;
-  } finally {
+const authStore = useAuthStore();
+
+const accessToken = ref(authStore.accessToken);
+const socket = io('http://localhost:5173', {
+  auth: {
+    token: accessToken.value
+  },
+});
+
+socket.on('connect', () => {
+  console.log('Connected to server');
+  
+  socket.emit('joinProjectFileList', projectId);
+
+  socket.on('fileList', (files) => {
+    fileTree.value = files;
     filesLoading.value = false;
-  }
-};
+  });
+});
+
+// const getFileTree = async () => {
+//   filesLoading.value = true;
+//   try {
+//     const response = await httpClient.get(`/project/${projectId}/files/structure`);
+//     fileTree.value = response.data;
+//   } finally {
+//     filesLoading.value = false;
+//   }
+// };
 
 onMounted(async () => {
-  await getFileTree();
+  // await getFileTree();
 });
 
 const renderProject = () => {
@@ -192,7 +214,7 @@ const createNewFile = async () => {
         fileName: newFileName.value,
         filePath: selectedFile.value ? selectedFile.value.key : "",
       });
-      await getFileTree();
+      // await getFileTree();
       toast.add({
         severity: "success",
         summary: "Sukces",
@@ -218,7 +240,7 @@ const createNewDirectory = async () => {
         directoryName: newDirectoryName.value,
         directoryPath: selectedFile.value ? selectedFile.value.key : "",
       });
-      await getFileTree();
+      // await getFileTree();
       toast.add({
         severity: "success",
         summary: "Sukces",
@@ -262,7 +284,7 @@ const uploadFile = async () => {
       detail: "Plik został przesłany!",
       life: 3000,
     });
-    await getFileTree();
+    // await getFileTree();
     uploadedFile.value = null;
     newFileDialogVisible.value = false;
   } catch (error) {

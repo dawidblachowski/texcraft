@@ -371,6 +371,20 @@ export default class ProjectService {
         if (!project) {
             throw new Error("Projekt nie znaleziony");
         }
+
+        const existingDirectory = await prisma.file.findFirst({
+            where: {
+                filename: directoryName,
+                parentId,
+                projectId,
+                isDirectory: true,
+            },
+        });
+
+        if (existingDirectory) {
+            throw new Error("Katalog o tej nazwie już istnieje");
+        }
+
         try {
             await FilesService.createDirectory(projectId, directoryName);
 

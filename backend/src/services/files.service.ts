@@ -85,11 +85,26 @@ export default class FilesService {
 
         const dir = path.join(DATA_FOLDER, projectId, sanitize(subPath));
 
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-            logger.info(`Created directory at ${dir}`);
+        if (fs.existsSync(dir)) {
+            throw new Error('Katalog już istnieje');
         }
+
+        fs.mkdirSync(dir, { recursive: true });
+        logger.info(`Created directory at ${dir}`);
 
         return dir;
     }
+
+    static async getFilesStructureForProject(projectId: string) {
+        try {
+            const files = await prisma.file.findMany({
+                where: { projectId },
+            });
+            return files;
+        } catch (error) {
+            logger.error(`Failed to get files structure for project ${projectId}: ${error}`);
+            throw new Error(`Failed to get files structure for project ${projectId}`);
+        }
+    }
+
 }
