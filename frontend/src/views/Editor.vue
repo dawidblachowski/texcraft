@@ -174,6 +174,15 @@ socket.on('connect', () => {
     filesLoading.value = false;
   });
 
+  // Listen for file updates
+  socket.on('yjs-update', (fileId: string, update: Uint8Array) => {
+    if (fileId === selectedFile.value?.key) {
+      // Handle the update
+    }
+  });
+});
+
+
 onMounted(async () => {
 });
 

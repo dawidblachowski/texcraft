@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, onBeforeUnmount } from 'vue';
+import { onMounted, ref, onBeforeUnmount, watch } from 'vue';
 import { io, Socket } from 'socket.io-client';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
@@ -19,29 +19,48 @@ const props = defineProps<{
 
 const editorContainer = ref<HTMLElement | null>(null);
 const editorInstance = ref<monaco.editor.IStandaloneCodeEditor | null>(null);
-const editorValue = ref<string>();
+const ydoc = new Y.Doc();
+const yText = ydoc.getText('monaco');
+
 onMounted(() => {
-  if(!editorContainer.value) {
+  if (!editorContainer.value) {
     return;
   }
   editorInstance.value = monaco.editor.create(editorContainer.value, {
-    value: editorValue.value,
+    value: '',
     language: 'javascript',
     theme: 'vs-dark',
   });
-  if(!editorInstance.value) {
+
+  if (!editorInstance.value) {
     return;
   }
-  // Emit changes
-  // editorInstance.value.onDidChangeModelContent(() => {
-  //   emit('update:value', editorInstance.value?.getValue());
-  // });
+
+  new MonacoBinding(yText, editorInstance.value.getModel(), new Set([editorInstance.value]), ydoc);
+
+  props.socket.emit('joinProjectFile', props.projectId, props.fileId);
+
+  props.socket.on('yjs-sync', (fileId: string, syncUpdate: Uint8Array) => {
+    if (fileId === props.fileId) {
+      Y.applyUpdate(ydoc, syncUpdate);
+    }
+  });
+
+  props.socket.on('yjs-update', (fileId: string, update: Uint8Array) => {
+    if (fileId === props.fileId) {
+      Y.applyUpdate(ydoc, update);
+    }
+  });
+
+  ydoc.on('update', (update: Uint8Array) => {
+    props.socket.emit('yjs-update', props.fileId, update);
+  });
 });
 
 onBeforeUnmount(() => {
   if (editorInstance.value) {
     editorInstance.value.dispose();
   }
+  ydoc.destroy();
 });
-
 </script>
