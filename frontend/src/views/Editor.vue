@@ -120,7 +120,6 @@
 import { ref, onMounted, watch } from "vue";
 import { useToast } from "primevue/usetoast";
 import TopBar from "../components/TopBar.vue";
-import FileTreeSkeleton from "../components/FileTreeSkeleton.vue";
 import httpClient from "../utils/httpClient";
 import { useRoute } from "vue-router";
 import { io } from "socket.io-client";
@@ -157,7 +156,7 @@ const filesLoading = ref(true);
 const authStore = useAuthStore();
 
 const accessToken = ref(authStore.accessToken);
-const socket = io('http://localhost:5174', {
+const socket = io('http://localhost:5173', {
   auth: {
     token: accessToken.value
   },

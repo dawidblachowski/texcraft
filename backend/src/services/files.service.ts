@@ -172,4 +172,40 @@ export default class FilesService {
         return path.join(await this.getFilePathFromFile(parentDir), file.filename);
     }
 
+    static async saveFileContent(fileId: string, content: string) {
+        if (DATA_FOLDER === undefined) {
+            throw new Error('Folder danych nie jest zdefiniowany');
+        }
+
+        let file
+        try {
+            file = await prisma.file.findUnique({
+                where: { id: fileId },
+            });
+            if(!file){
+                throw new Error('Plik nie istnieje w bazie');
+            }
+        } catch (error) {
+            logger.error(`Failed to get file by id ${fileId}: ${error}`);
+            throw new Error(`Failed to get file by id ${fileId}`);
+        }
+        const filePath = await this.getFilePathFromFile(file);
+
+        if (!filePath) {
+            throw new Error('Ścieżka pliku jest nieprawidłowa');
+        }
+        const filePathFull = path.join(DATA_FOLDER, file.projectId, filePath);
+        if (!fs.existsSync(filePathFull)) {
+            throw new Error('Plik nie istnieje');
+        }
+
+        try {
+            fs.writeFileSync(filePathFull, content);
+            logger.info(`Saved content of file at ${filePathFull}`);
+        } catch (error) {
+            logger.error(`Failed to save content of file at ${filePathFull}: ${error}`);
+            throw new Error(`Failed to save content of file at ${filePathFull}`);
+        }
+    }
+
 }
