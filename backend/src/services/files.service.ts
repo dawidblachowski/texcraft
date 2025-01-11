@@ -119,24 +119,40 @@ export default class FilesService {
             throw new Error(`Failed to get file by id ${fileId}`);
         }
     }
-    
-    static async getFileContent(projectId: string, filePath: string) {
+
+    static async getFileContent(fileId:string): Promise<string> {
         if (DATA_FOLDER === undefined) {
             throw new Error('Folder danych nie jest zdefiniowany');
         }
+        let file
+        try {
+            file = await prisma.file.findUnique({
+                where: { id: fileId },
+            });
+            if(!file){
+                throw new Error('Plik nie istnieje w bazie');
+            }
+        } catch (error) {
+            logger.error(`Failed to get file by id ${fileId}: ${error}`);
+            throw new Error(`Failed to get file by id ${fileId}`);
+        }
+        const filePath = await this.getFilePathFromFile(file);
 
-        const file = path.join(DATA_FOLDER, projectId, filePath);
-
-        if (!fs.existsSync(file)) {
+        if (!filePath) {
+            throw new Error('Ścieżka pliku jest nieprawidłowa');
+        }
+        const filePathFull = path.join(DATA_FOLDER, file.projectId, filePath);
+        if (!fs.existsSync(filePathFull)) {
             throw new Error('Plik nie istnieje');
         }
 
         try {
-            const content = fs.readFileSync(file, 'utf8');
+            const content = fs.readFileSync(filePathFull, 'utf8');
+            logger.info(`Got content of file at ${filePathFull}`);
             return content;
         } catch (error) {
-            logger.error(`Failed to get content of file at ${file}: ${error}`);
-            throw new Error(`Failed to get content of file at ${file}`);
+            logger.error(`Failed to get content of file at ${filePathFull}: ${error}`);
+            throw new Error(`Failed to get content of file at ${filePathFull}`);
         }
     }
 

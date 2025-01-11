@@ -15,21 +15,21 @@
             :filter="true"
             class="w-full h-full"
             selectionMode="single"
-            v-model:selectionKeys="selectedFile"
+            v-model:selectionKeys="selectedFileSelectionKeys"
+            @nodeSelect="handleFileSelection"
             :value="formatFileTree(fileTree)"
             nodeKey="key"
-            v-if="!filesLoading"
+            :loading="filesLoading"
           ></Tree>
-          <FileTreeSkeleton v-else />
         </SplitterPanel>
 
         <!-- Editor Panel -->
         <SplitterPanel class="flex" :size="40">
-          <div v-if="!selectedFile || Object.keys(selectedFile).length === 0">
+          <div v-if="!selectedFile">
             Najpierw wybierz plik!
           </div>
-          <div v-else>
-            <MonacoEditor :fileId="Object.keys(selectedFile)[0]" :projectId="projectId" :socket="socket" />
+          <div class="w-full h-full" v-else>
+            <MonacoEditor :key="selectedFile.key" :fileId="selectedFile.key" :projectId="projectId" :socket="socket" />
           </div>
         </SplitterPanel>
 
@@ -126,6 +126,7 @@ import { useRoute } from "vue-router";
 import { io } from "socket.io-client";
 import { useAuthStore } from "../stores/auth.store";
 import MonacoEditor from "../components/MonacoEditor.vue";
+import type { TreeSelectionKeys } from "primevue/tree";
 
 interface File {
   id: string;
@@ -144,11 +145,9 @@ const toast = useToast();
 const route = useRoute();
 const projectId = route.params.id as string;
 const fileTree = ref([]);
-interface SelectedFile {
-  key: string;
-}
+const selectedFileSelectionKeys = ref<string[]>([]);
 
-const selectedFile = ref<SelectedFile | undefined>(undefined);
+const selectedFile = ref<TreeSelectionKeys | undefined>(undefined);
 const pdfContent = ref("");
 const uploadedFile = ref<Blob | null>(null);
 const newFileName = ref("");
@@ -158,7 +157,7 @@ const filesLoading = ref(true);
 const authStore = useAuthStore();
 
 const accessToken = ref(authStore.accessToken);
-const socket = io('http://localhost:5173', {
+const socket = io('http://localhost:5174', {
   auth: {
     token: accessToken.value
   },
@@ -174,12 +173,6 @@ socket.on('connect', () => {
     filesLoading.value = false;
   });
 
-  // Listen for file updates
-  socket.on('yjs-update', (fileId: string, update: Uint8Array) => {
-    if (fileId === selectedFile.value?.key) {
-      // Handle the update
-    }
-  });
 });
 
 
@@ -211,7 +204,7 @@ const createNewFile = async () => {
     try {
       await httpClient.post(`/project/${projectId}/files/tex`, {
         fileName: newFileName.value,
-        filePath: selectedFile.value ? selectedFile.value.key : "",
+        filePath: "",
       });
       toast.add({
         severity: "success",
@@ -236,7 +229,7 @@ const createNewDirectory = async () => {
     try {
       await httpClient.post(`/project/${projectId}/directories`, {
         directoryName: newDirectoryName.value,
-        directoryPath: selectedFile.value ? selectedFile.value.key : "",
+        directoryPath: "",
       });
       toast.add({
         severity: "success",
@@ -326,6 +319,11 @@ const formatFileTree = (fileTree: Array<File>) => {
 
   return buildTree(fileTree);
 };
+
+const handleFileSelection = (node: any) => {
+  selectedFile.value = node;
+};
+
 </script>
 
 <style scoped>

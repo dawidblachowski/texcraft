@@ -1,15 +1,16 @@
 <template>
-  projectId: {{  props.projectId }} <br>
-  fileId: {{  props.fileId }} <br>
-  <div ref="editorContainer" style="height: 80vh; width: 40vw; border: 1px solid #ccc;"></div>
+  <div class="w-full h-full"> 
+    <div ref="editorContainer" class="w-full h-full"></div>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, onBeforeUnmount, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { io, Socket } from 'socket.io-client';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
 import * as monaco from 'monaco-editor';
+import SocketIOProvider from '../utils/socketIoProvider';
 
 const props = defineProps<{
   projectId: string;
@@ -17,50 +18,61 @@ const props = defineProps<{
   socket: Socket;
 }>();
 
-const editorContainer = ref<HTMLElement | null>(null);
-const editorInstance = ref<monaco.editor.IStandaloneCodeEditor | null>(null);
+
 const ydoc = new Y.Doc();
-const yText = ydoc.getText('monaco');
+const provider = new SocketIOProvider(ydoc, props.projectId, props.fileId, props.socket);
+const type = ydoc.getText(props.fileId);
+
+const editorContainer = ref<HTMLElement | null>(null);
 
 onMounted(() => {
-  if (!editorContainer.value) {
+  if(!editorContainer.value) {
+    console.error("Editor container is null");
     return;
   }
-  editorInstance.value = monaco.editor.create(editorContainer.value, {
-    value: '',
-    language: 'javascript',
-    theme: 'vs-dark',
+  const editor = monaco.editor.create(editorContainer.value, {
+    value: "", 
+    language: "latex",
+    theme: "vs-dark",
+    automaticLayout: true,
   });
 
-  if (!editorInstance.value) {
-    return;
+  const model = editor.getModel();
+  if(model) {
+    const binding = new MonacoBinding(type, model, new Set([editor]), provider.awareness);
+  }
+  else {
+    console.error("Model is null");
   }
 
-  new MonacoBinding(yText, editorInstance.value.getModel(), new Set([editorInstance.value]), ydoc);
-
-  props.socket.emit('joinProjectFile', props.projectId, props.fileId);
-
-  props.socket.on('yjs-sync', (fileId: string, syncUpdate: Uint8Array) => {
-    if (fileId === props.fileId) {
-      Y.applyUpdate(ydoc, syncUpdate);
-    }
-  });
-
-  props.socket.on('yjs-update', (fileId: string, update: Uint8Array) => {
-    if (fileId === props.fileId) {
-      Y.applyUpdate(ydoc, update);
-    }
-  });
-
-  ydoc.on('update', (update: Uint8Array) => {
-    props.socket.emit('yjs-update', props.fileId, update);
-  });
 });
 
 onBeforeUnmount(() => {
-  if (editorInstance.value) {
-    editorInstance.value.dispose();
-  }
-  ydoc.destroy();
+  provider.awareness.setLocalState(null);
 });
 </script>
+
+<style>
+.yRemoteSelection {
+    background-color: rgb(250, 129, 0, .5)
+}
+.yRemoteSelectionHead {
+    position: absolute;
+    border-left: orange solid 2px;
+    border-top: orange solid 2px;
+    border-bottom: orange solid 2px;
+    height: 100%;
+    box-sizing: border-box;
+}
+.yRemoteSelectionHead::after {
+    position: absolute;
+    content: attr(data-user-id); /* Display user ID */
+    border: 3px solid orange;
+    border-radius: 4px;
+    left: -4px;
+    top: -5px;
+    background-color: white;
+    padding: 2px;
+    font-size: 10px;
+}
+</style>
