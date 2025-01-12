@@ -11,6 +11,10 @@ import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
 import * as monaco from 'monaco-editor';
 import SocketIOProvider from '../utils/socketIoProvider';
+import latex from 'monaco-latex';
+monaco.languages.register({ id: 'latex' }); 
+monaco.languages.setMonarchTokensProvider('latex', latex);
+
 
 const props = defineProps<{
   projectId: string;
