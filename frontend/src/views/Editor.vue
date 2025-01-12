@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import { useToast } from "primevue/usetoast";
 import TopBar from "../components/TopBar.vue";
 import httpClient from "../utils/httpClient";
@@ -196,6 +196,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   fetchProject();
+  renderProject();
 });
 
 onBeforeUnmount(() => {
@@ -203,6 +204,10 @@ onBeforeUnmount(() => {
 });
 
 const renderProject = async () => {
+  if (selectedFile.value) {
+    socket.emit('saveFile', projectId, selectedFile.value.key);
+  }
+
   try {
     const response = await httpClient.get(`/project/${projectId}/pdf`, {
       responseType: 'blob'

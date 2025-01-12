@@ -8,6 +8,7 @@ import { LRUCache } from 'lru-cache';
 
 const fileMap = new Map<string, Y.Doc>();
 const saveDebounceTimers = new Map<string, NodeJS.Timeout>();
+const fileRemovalTimers = new Map<string, NodeJS.Timeout>();
 
 const projectAccessCache = new LRUCache<string, boolean>({
   max: 500, 
@@ -23,6 +24,28 @@ async function getCachedProjectAccess(userId: string, projectId: string): Promis
   const hasAccess = !!(await ProjectService.getProjectIfUserHasRights(projectId, userId));
   projectAccessCache.set(cacheKey, hasAccess);
   return hasAccess;
+}
+
+function scheduleFileRemoval(fileId: string) {
+  if (fileRemovalTimers.has(fileId)) {
+    clearTimeout(fileRemovalTimers.get(fileId));
+  }
+
+  const timer = setTimeout(() => {
+    fileMap.delete(fileId);
+    fileRemovalTimers.delete(fileId);
+    logger.info(`File ${fileId} removed from memory due to inactivity.`);
+  }, 1000 * 60 * 5); // 5 minutes
+
+  fileRemovalTimers.set(fileId, timer);
+}
+
+function resetFileRemovalTimer(fileId: string) {
+  if (fileRemovalTimers.has(fileId)) {
+    clearTimeout(fileRemovalTimers.get(fileId));
+    fileRemovalTimers.delete(fileId);
+  }
+  scheduleFileRemoval(fileId);
 }
 
 async function saveFile(fileId: string) {
@@ -42,6 +65,7 @@ async function saveFile(fileId: string) {
   } catch (error) {
     logger.error(`Error saving file ${fileId}:`, error);
   }
+  resetFileRemovalTimer(fileId);
 }
 
 function scheduleFileSave(fileId: string) {
@@ -55,6 +79,7 @@ function scheduleFileSave(fileId: string) {
   }, 5000); 
 
   saveDebounceTimers.set(fileId, timer);
+  resetFileRemovalTimer(fileId);
 }
 
 export function configureSocketIO(io: Server) {
@@ -138,6 +163,7 @@ export function configureSocketIO(io: Server) {
         } else {
           logger.error(`Document not found for file ${fileId}`);
         }
+        resetFileRemovalTimer(fileId);
       } catch (error) {
         logger.error('Error in joinProjectFile:', error);
         socket.emit('error', 'Error joining project file');
@@ -164,6 +190,7 @@ export function configureSocketIO(io: Server) {
         } else {
           logger.error(`No document found for file ${fileId}`);
         }
+        resetFileRemovalTimer(fileId);
       } catch (error) {
         logger.error('Error in update:', error);
         socket.emit('error', 'Error updating file');
@@ -178,6 +205,17 @@ export function configureSocketIO(io: Server) {
       } catch (error) {
         logger.error('Error in awareness-update:', error);
         socket.emit('error', 'Error in awareness update');
+      }
+    });
+
+    socket.on('saveFile', async (projectId, fileId) => {
+      try {
+        if (!(await validateProjectAccess(projectId))) return;
+        await saveFile(fileId);
+        socket.emit('fileSaved', fileId);
+      } catch (error) {
+        logger.error('Error in saveFile:', error);
+        socket.emit('error', 'Error saving file');
       }
     });
 
