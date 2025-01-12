@@ -86,10 +86,6 @@ export default class FilesService {
 
         const dir = path.join(DATA_FOLDER, projectId, sanitize(subPath));
 
-        if (fs.existsSync(dir)) {
-            throw new Error('Katalog już istnieje');
-        }
-
         fs.mkdirSync(dir, { recursive: true });
         logger.info(`Created directory at ${dir}`);
 
