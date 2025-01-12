@@ -190,13 +190,37 @@ onMounted(() => {
   fetchProject();
 });
 
-const renderProject = () => {
-  toast.add({
-    severity: "info",
-    summary: "Info",
-    detail: "Not implemented yet",
-    life: 3000,
-  });
+const renderProject = async () => {
+  try {
+    const response = await httpClient.get(`/project/${projectId}/pdf`, {
+      responseType: 'blob'
+    });
+    const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+    pdfContent.value = URL.createObjectURL(pdfBlob);
+    toast.add({
+      severity: "success",
+      summary: "Sukces",
+      detail: "PDF został wygenerowany!",
+      life: 3000,
+    });
+  } catch (error) {
+    const logs = (error as any).response?.data?.logs;
+    const errorMessage = (error as any).response?.data?.message || "Nie udało się wygenerować PDF!";
+    toast.add({
+      severity: "error",
+      summary: "Błąd",
+      detail: errorMessage,
+      life: 3000,
+    });
+    if (logs) {
+      toast.add({
+        severity: "error",
+        summary: "Błąd kompilacji",
+        detail: logs,
+        life: 5000,
+      });
+    }
+  }
 };
 
 const onSelectFile = (event: any) => {

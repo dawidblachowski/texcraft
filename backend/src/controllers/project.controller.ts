@@ -351,7 +351,11 @@ export class ProjectController {
             if (customFolderPath != '') {
                 fs.rmdirSync(customFolderPath, { recursive: true });
             }
-            handleError(error, res);
+            if (error instanceof Error) {
+                res.status(400).json({ message: error.message, logs: (error as any).logs });
+            } else {
+                handleError(error, res);
+            }
         }
     }
 

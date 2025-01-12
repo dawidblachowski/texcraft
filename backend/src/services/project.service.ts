@@ -437,7 +437,7 @@ export default class ProjectService {
         } catch (error) {
             logger.error(`Failed to generate PDF for project: ${projectId} by user: ${userId}`);
             if (error instanceof Error) {
-                throw new Error(error.message);
+                throw { message: error.message, logs: 'logs' in error ? error.logs : undefined };
             } else {
                 throw new Error("Nie udało się wygenerować pliku PDF");
             }

@@ -82,12 +82,12 @@ export default class PdfService {
       exec(command, (error, stdout, stderr) => {
         if (error) {
           logger.error(`LaTeX compilation error: ${stderr.trim()}`);
-          return reject(new Error(`Błąd kompilacji LaTeX: ${stderr.trim()}\nDziennik:\n${stdout.trim()}`));
+          return reject({ message: `Błąd kompilacji LaTeX: ${stderr.trim()}`, logs: stdout.trim() });
         }
         const compiledPdfPath = path.join(outputDir, 'main.pdf');
         if (!fs.existsSync(compiledPdfPath)) {
           logger.error('PDF file was not generated.');
-          return reject(new Error('Plik PDF nie został wygenerowany.'));
+          return reject({ message: 'Plik PDF nie został wygenerowany.', logs: stdout.trim() });
         }
         logger.info(`Successfully compiled LaTeX to PDF at ${compiledPdfPath}`);
         resolve({ path: compiledPdfPath, logs: stdout.trim() });
