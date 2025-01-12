@@ -2,6 +2,9 @@ import prisma from "@/config/database";
 import FilesService from "./files.service";
 import path from 'path';
 import logger from "@/config/logger";
+import PdfService from "@/services/pdf.service";
+import { DATA_FOLDER } from "@/config/env";
+import fs from 'fs';
 
 export default class ProjectService {
 
@@ -284,6 +287,7 @@ export default class ProjectService {
                 throw new Error("Nie udało się utworzyć pliku");
             }
             logger.info(`Created TeX file: ${fileName} in project: ${projectId} by user: ${userId}`);
+            return fileRecord;
         } catch (error) {
             logger.error(`Failed to create TeX file: ${fileName} in project: ${projectId} by user: ${userId}`);
             throw new Error("Nie udało się utworzyć pliku");
@@ -330,6 +334,7 @@ export default class ProjectService {
                 throw new Error("Nie udało się przesłać pliku");
             }
             logger.info(`Uploaded file: ${fileName} to project: ${projectId} by user: ${userId}`);
+            return fileRecord;
         } catch (error) {
             if (error instanceof Error) {
                 logger.error(`Failed to upload file: ${fileName} to project: ${projectId} by user: ${userId} - ${error.message}`);
@@ -405,6 +410,37 @@ export default class ProjectService {
         } catch (error) {
             logger.error(`Failed to create directory: ${directoryName} in project: ${projectId} by user: ${userId}`);
             throw new Error("Nie udało się utworzyć katalogu");
+        }
+    }
+
+    static async getPdf(projectId: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Projekt nie znaleziony");
+        }
+
+        if (!DATA_FOLDER) {
+            throw new Error("DATA_FOLDER is not defined");
+        }
+        const projectDir = path.join(DATA_FOLDER, projectId);
+
+        try {
+            await PdfService.ensureTempDir();
+            const customFolderPath = await PdfService.createCustomFolder();
+            const projectFolderPath = path.join(customFolderPath, 'project');
+            const outputFolderPath = path.join(customFolderPath, 'output');
+            const mainTexPath = path.join(projectFolderPath, 'main.tex');
+            await PdfService.copyRecursiveSync(projectDir, projectFolderPath);
+            const { path: pdfPath, logs } = await PdfService.compileLatexToPdf(mainTexPath, outputFolderPath);
+
+            return { pdfPath, logs, customFolderPath };
+        } catch (error) {
+            logger.error(`Failed to generate PDF for project: ${projectId} by user: ${userId}`);
+            if (error instanceof Error) {
+                throw new Error(error.message);
+            } else {
+                throw new Error("Nie udało się wygenerować pliku PDF");
+            }
         }
     }
 }

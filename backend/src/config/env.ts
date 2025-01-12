@@ -14,5 +14,6 @@ export const {
     OAUTH2_CLIENT_SECRET,
 
     DATA_FOLDER, 
-    MAX_FILE_SIZE
+    MAX_FILE_SIZE, 
+    TEMP_DIR,
 } = process.env;

@@ -18,6 +18,7 @@ router.post("/:id/files/upload", isAuthenticated, upload, handleUploadErrors, Pr
 
 router.get("/:id/files/structure", isAuthenticated, ProjectController.getFilesStructure);
 router.post("/:id/directories", isAuthenticated, ProjectController.createDirectory);
+router.get("/:id/pdf", isAuthenticated, ProjectController.getPdf);
 
 router.get("/:id", isAuthenticated, ProjectController.getProject);
 router.put("/:id", isAuthenticated, ProjectController.updateProject);

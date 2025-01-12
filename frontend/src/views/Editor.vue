@@ -10,7 +10,8 @@
             <Button label="Render" icon="pi pi-file" class="w-1/2 p-button-info" @click="renderProject" />
             <Button label="Nowy Katalog" icon="pi pi-folder" class="w-1/2 p-button-warning" @click="newDirectoryDialogVisible=true" />
           </div>
-          <h2 class="text-xl font-bold">Pliki</h2>
+            <h2 class="text-xl font-bold mt-4 ml-4">{{ project?.title }}</h2>
+            <h3 class="text-xl font-bold mt-1 ml-4">Pliki</h3>
           <Tree
             :filter="true"
             class="w-full h-full"
@@ -120,7 +121,7 @@
 import { ref, onMounted, watch } from "vue";
 import { useToast } from "primevue/usetoast";
 import TopBar from "../components/TopBar.vue";
-import FileTreeSkeleton from "../components/FileTreeSkeleton.vue";
+
 import httpClient from "../utils/httpClient";
 import { useRoute } from "vue-router";
 import { io } from "socket.io-client";
@@ -157,7 +158,7 @@ const filesLoading = ref(true);
 const authStore = useAuthStore();
 
 const accessToken = ref(authStore.accessToken);
-const socket = io('http://localhost:5174', {
+const socket = io('http://localhost:5173', {
   auth: {
     token: accessToken.value
   },
@@ -175,8 +176,19 @@ socket.on('connect', () => {
 
 });
 
+const project = ref<{ title: string } | null>(null);
 
-onMounted(async () => {
+const fetchProject = async () => {
+  try {
+    const response = await httpClient.get(`/project/${projectId}`);
+    project.value = response.data;
+  } catch (error) {
+    console.error("Failed to fetch project:", error);
+  }
+};
+
+onMounted(() => {
+  fetchProject();
 });
 
 const renderProject = () => {

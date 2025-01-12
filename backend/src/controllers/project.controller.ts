@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import ProjectService from "@/services/project.service";
 import path from 'path';
+import fs from 'fs';
 import sanitize from 'sanitize-filename';
 import logger from "@/config/logger";
 
@@ -278,52 +279,15 @@ export class ProjectController {
         try {
             const structure = await ProjectService.getFilesStructure(projectId, userId);
             // Emit socket event
-            
+            if (req.io) {
+                req.io.to(`project:fileList:${projectId}`).emit('fileList', structure);
+                logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(structure)}`);
+            }
             res.status(200).json(structure);
         } catch (error) {
             handleError(error, res);
         }
     }
-
-    // static async createFolder(req: Request, res: Response, next: any) {
-    //     /*     #swagger.tags = ['ProjectFile']
-    //             #swagger.description = 'Create a new folder in a project'
-    //     */
-    //     if (!req.user) {
-    //         res.status(401).json({ message: "Unauthorized" });
-    //         return;
-    //     }
-    //     const userId = req.user.id;
-    //     const projectId = req.params.id;
-
-    //     let folderName, folderPath;
-    //     try {
-    //         folderName = sanitize(req.body.folderName);
-    //         folderPath = sanitize(req.body.folderPath || "");
-    //     } catch (error) {
-    //         res.status(400).json({ message: "Invalid folder name or path" });
-    //         return;
-    //     }
-
-    //     if (folderPath.includes('..')) {
-    //         res.status(400).json({ message: "Nieprawidłowa ścieżka folderu" });
-    //         return;
-    //     }
-    //     logger.info(`Creating folder: ${folderName} in project: ${projectId} by user: ${userId}`);
-
-    //     try {
-    //         await ProjectService.createDirectory(projectId, folderName, folderPath, userId);
-    //         // Emit socket event
-    //         if (req.io) {
-    //             const files = await ProjectService.getFilesStructure(projectId, userId);
-    //             req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
-    //             logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
-    //         }
-    //         res.status(201).json({ message: "Folder utworzony" });
-    //     } catch (error) {
-    //         handleError(error, res);
-    //     }
-    // }
 
     static async createDirectory(req: Request, res: Response, next: any) {
         /*     #swagger.tags = ['ProjectFile']
@@ -356,6 +320,37 @@ export class ProjectController {
             }
             res.status(201).json({ message: "Katalog utworzony" });
         } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async getPdf(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Get a PDF file for a project'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        logger.info(`Generating PDF for project: ${projectId} by user: ${userId}`);
+
+        let customFolderPath: string = '';
+        try {
+            const { pdfPath, logs, customFolderPath: cfp } = await ProjectService.getPdf(projectId, userId);
+            customFolderPath = cfp;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `attachment; filename=${path.basename(pdfPath)}`);
+            const stream = fs.createReadStream(pdfPath);
+            stream.pipe(res);
+            stream.on('close', () => {
+                fs.rmdirSync(customFolderPath, { recursive: true });
+            });
+        } catch (error) {
+            if (customFolderPath != '') {
+                fs.rmdirSync(customFolderPath, { recursive: true });
+            }
             handleError(error, res);
         }
     }
