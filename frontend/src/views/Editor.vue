@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, onBeforeUnmount } from "vue";
 import { useToast } from "primevue/usetoast";
 import TopBar from "../components/TopBar.vue";
 import httpClient from "../utils/httpClient";
@@ -186,8 +186,20 @@ const fetchProject = async () => {
   }
 };
 
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault();
+    renderProject();
+  }
+};
+
 onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
   fetchProject();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeyDown);
 });
 
 const renderProject = async () => {
