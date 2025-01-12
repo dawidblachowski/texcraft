@@ -7,6 +7,7 @@ import ProjectService from '@/services/project.service';
 import { LRUCache } from 'lru-cache';
 
 const fileMap = new Map<string, Y.Doc>();
+const saveDebounceTimers = new Map<string, NodeJS.Timeout>();
 
 const projectAccessCache = new LRUCache<string, boolean>({
   max: 500, 
@@ -22,6 +23,38 @@ async function getCachedProjectAccess(userId: string, projectId: string): Promis
   const hasAccess = !!(await ProjectService.getProjectIfUserHasRights(projectId, userId));
   projectAccessCache.set(cacheKey, hasAccess);
   return hasAccess;
+}
+
+async function saveFile(fileId: string) {
+  if (!fileMap.has(fileId)) {
+    logger.error(`Cannot save file. No document found for fileId: ${fileId}`);
+    return;
+  }
+
+  try {
+    const doc = fileMap.get(fileId);
+    if (doc) {
+      const ytext = doc.getText(fileId);
+      const docContentString = ytext.toString();
+      await FilesService.saveFileContent(fileId, docContentString);
+      logger.info(`File ${fileId} saved successfully.`);
+    }
+  } catch (error) {
+    logger.error(`Error saving file ${fileId}:`, error);
+  }
+}
+
+function scheduleFileSave(fileId: string) {
+  if (saveDebounceTimers.has(fileId)) {
+    clearTimeout(saveDebounceTimers.get(fileId)); 
+  }
+
+  const timer = setTimeout(() => {
+    saveFile(fileId); 
+    saveDebounceTimers.delete(fileId); 
+  }, 5000); 
+
+  saveDebounceTimers.set(fileId, timer);
 }
 
 export function configureSocketIO(io: Server) {
@@ -53,8 +86,7 @@ export function configureSocketIO(io: Server) {
   io.on('connection', (socket) => {
     logger.info(`Socket connected: ${socket.data.user?.email || 'Unknown User'}`);
 
-    // Validate project access helper
-    async function validateProjectAccess(projectId:string) {
+    async function validateProjectAccess(projectId: string) {
       const hasAccess = await getCachedProjectAccess(socket.data.user.id, projectId);
       if (!hasAccess) {
         logger.error(
@@ -67,7 +99,6 @@ export function configureSocketIO(io: Server) {
     }
 
     socket.on('joinProjectFileList', async (projectId) => {
-      logger.debug(`joinProjectFileList event received for projectId: ${projectId}`);
       try {
         if (!(await validateProjectAccess(projectId))) return;
 
@@ -75,7 +106,6 @@ export function configureSocketIO(io: Server) {
         logger.info(`Socket joined project file list room: project:fileList:${projectId}`);
 
         const files = await FilesService.getFilesStructureForProject(projectId);
-        logger.debug(`Files structure for project ${projectId}: ${JSON.stringify(files)}`);
         socket.emit('fileList', files);
       } catch (error) {
         logger.error('Error in joinProjectFileList:', error);
@@ -128,6 +158,9 @@ export function configureSocketIO(io: Server) {
           }
 
           socket.to(`project-${projectId}:file-${fileId}`).emit('update', update);
+
+          // Schedule the file save
+          scheduleFileSave(fileId);
         } else {
           logger.error(`No document found for file ${fileId}`);
         }
