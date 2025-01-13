@@ -5,7 +5,12 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx watch ./src/index.ts",
-    "swagger": "tsx ./src/config/swagger.ts"
+    "swagger": "tsx ./src/config/swagger.ts",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "prisma-push": "prisma db push",
+    "prisma-generate": "prisma generate",
+    "build": "tsc"
   },
   "dependencies": {
     "@prisma/client": "6.1.0",
@@ -53,6 +58,7 @@
     "concurrently": "^9.1.2",
     "jest": "^29.7.0",
     "prisma": "^6.1.0",
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

@@ -21,7 +21,7 @@ export default class SocketIOProvider extends Y.AbstractConnector {
             Y.applyUpdate(this.doc, new Uint8Array(update));
         })
 
-        this.doc.on("update", (update, origin)=>{
+        this.doc.on("update", (update)=>{
             this.socket.emit("update", projectId, fileId, update);
         })
 

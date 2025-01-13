@@ -12,6 +12,7 @@ import logger from './config/logger';
 import { Server } from 'socket.io';
 import http from 'http';
 import { configureSocketIO } from './config/socket-setup';
+import path from 'path';
 
 async function main() {
   const app = express();
@@ -42,6 +43,12 @@ async function main() {
 
   app.use('/api', apiRouter);
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+
+  app.use(express.static(path.resolve(__dirname, './public')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, './public/index.html'));
+  });
   
   server.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);

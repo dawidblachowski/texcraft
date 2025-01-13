@@ -157,7 +157,7 @@ const filesLoading = ref(true);
 const authStore = useAuthStore();
 
 const accessToken = ref(authStore.accessToken);
-const socket = io('http://localhost:5173', {
+const socket = io('/', {
   auth: {
     token: accessToken.value
   },

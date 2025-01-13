@@ -8,8 +8,9 @@ export const useAuthStore = defineStore(
   'auth',
   {
     state: () => {
-      if(localStorage.getItem('pinia')) {
-        return JSON.parse(localStorage.getItem('pinia') as string).auth
+      const piniaState = localStorage.getItem('pinia');
+      if (piniaState) {
+        return JSON.parse(piniaState).auth;
       }
       return {
         accessToken: null,

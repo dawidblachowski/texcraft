@@ -6,7 +6,7 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { io, Socket } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
 import * as Y from 'yjs';
 import { MonacoBinding } from 'y-monaco';
 import * as monaco from 'monaco-editor';
@@ -43,7 +43,7 @@ onMounted(() => {
 
   const model = editor.getModel();
   if(model) {
-    const binding = new MonacoBinding(type, model, new Set([editor]), provider.awareness);
+    new MonacoBinding(type, model, new Set([editor]), provider.awareness);
   }
   else {
     console.error("Model is null");

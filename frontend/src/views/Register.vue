@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import LoginRegister from '../components/LoginRegister.vue';
 import { useAuthStore } from '../stores/auth.store';
 import router from '../router';

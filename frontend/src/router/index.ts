@@ -34,11 +34,14 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
-  const publicPages = ['/login', '/register']
+router.beforeEach((to, _, next) => {
+  const publicPages = ['/login', '/register', '/auth/callback']
   const authRequired = !publicPages.includes(to.path)
-  const loggedIn = JSON.parse(localStorage.getItem('pinia') as string).auth.isAuthenticated
-
+  const piniaState = localStorage.getItem('pinia');
+  let loggedIn = false;
+  if(piniaState) {
+    loggedIn = JSON.parse(piniaState).auth?.isAuthenticated;
+  }
   if (authRequired && !loggedIn) {
     return next('/login')
   }

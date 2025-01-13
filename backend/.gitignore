@@ -3,3 +3,5 @@ src/config/swagger-output.json
 data
 app.log
 temp
+dist
+src/public/*
