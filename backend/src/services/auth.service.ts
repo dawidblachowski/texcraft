@@ -1,7 +1,7 @@
-import prisma from "@/config/database";
+import prisma from "../config/database";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import logger from "@/config/logger";
+import logger from "../config/logger";
 
 import emailValidator from "../validators/email.validator";
 import passwordValidator from "../validators/password.validator";
@@ -13,7 +13,7 @@ import {
     REFRESH_TOKEN_EXPIRES_IN,
     JWT_ACCESS_SECRET,
     JWT_REFRESH_SECRET, 
-} from "@/config/env";
+} from "../config/env";
 
 export default class AuthService {
     static async register(email: string, password: string) {

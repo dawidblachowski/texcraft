@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import sanitize from 'sanitize-filename';
 import prisma from '../config/database';
-import logger from "@/config/logger";
+import logger from "../config/logger";
 import { File } from "@prisma/client";
 
 export default class FilesService {

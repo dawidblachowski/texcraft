@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import ProjectService from "@/services/project.service";
+import ProjectService from "../services/project.service";
 import path from 'path';
 import fs from 'fs';
 import sanitize from 'sanitize-filename';
-import logger from "@/config/logger";
+import logger from "../config/logger";
 
 const handleError = (error: unknown, res: Response) => {
     if (error instanceof Error) {

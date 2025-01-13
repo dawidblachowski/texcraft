@@ -1,9 +1,9 @@
-import prisma from "@/config/database";
+import prisma from "../config/database";
 import FilesService from "./files.service";
 import path from 'path';
-import logger from "@/config/logger";
-import PdfService from "@/services/pdf.service";
-import { DATA_FOLDER } from "@/config/env";
+import logger from "../config/logger";
+import PdfService from "../services/pdf.service";
+import { DATA_FOLDER } from "../config/env";
 import fs from 'fs';
 
 export default class ProjectService {

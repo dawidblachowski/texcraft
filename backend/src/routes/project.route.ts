@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { ProjectController } from "@/controllers/project.controller";
-import { isAuthenticated } from "@/middlewares/isAuthenticated";
-import { upload, handleUploadErrors } from "@/middlewares/upload";
+import { ProjectController } from "../controllers/project.controller";
+import { isAuthenticated } from "../middlewares/isAuthenticated";
+import { upload, handleUploadErrors } from "../middlewares/upload";
 
 const router = Router();
 

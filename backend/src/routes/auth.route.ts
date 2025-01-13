@@ -1,5 +1,5 @@
 import { Router } from "express";
-import AuthController from "@/controllers/auth.controller";
+import AuthController from "../controllers/auth.controller";
 import cookieParser from "cookie-parser";
 
 const router = Router();

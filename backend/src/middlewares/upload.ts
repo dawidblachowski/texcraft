@@ -5,7 +5,7 @@ import multer, { FileFilterCallback } from 'multer';
 import { Request, Response, NextFunction } from 'express';
 import { DATA_FOLDER } from '../config/env';
 import { MAX_FILE_SIZE } from '../config/env';
-import FilesService from '@/services/files.service';
+import FilesService from '../services/files.service';
 
 const storage = multer.diskStorage({
   destination: async (req: Request, file, cb) => {

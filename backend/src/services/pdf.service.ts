@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { v4 as uuidv4 } from 'uuid';
-import { TEMP_DIR } from '@/config/env';
-import logger from '@/config/logger';
+import { TEMP_DIR } from '../config/env';
+import logger from '../config/logger';
 
 export default class PdfService {
   static async ensureTempDir(): Promise<void> {

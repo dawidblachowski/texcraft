@@ -2,8 +2,8 @@ import { Server, Socket } from 'socket.io';
 import * as Y from 'yjs';
 import { isAuthenticated } from '../middlewares/isAuthenticated';
 import logger from './logger';
-import FilesService from '@/services/files.service';
-import ProjectService from '@/services/project.service';
+import FilesService from '../services/files.service';
+import ProjectService from '../services/project.service';
 import { LRUCache } from 'lru-cache';
 
 const fileMap = new Map<string, Y.Doc>();

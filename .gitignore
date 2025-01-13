@@ -4,3 +4,8 @@ frontend/node_modules
 backend/node_modules
 frontend/.env
 backend/.env
+./data
+./temp
+docker-compose.yaml
+app-data
+postgres-data
