@@ -91,8 +91,8 @@ export default class AuthController {
             res.cookie('refreshToken', tokens.refreshToken, {
                 httpOnly: true,
                 maxAge,
-                secure: process.env.NODE_ENV === 'production' ? true : false, // Ensure this is false in development
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Set sameSite to 'lax' in development
+                secure: process.env.NODE_ENV === 'production' ? true : false, 
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             });
 
             //and return access token

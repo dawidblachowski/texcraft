@@ -9,3 +9,4 @@ backend/.env
 docker-compose.yaml
 app-data
 postgres-data
+app-temp
