@@ -1,6 +1,3 @@
-// src/middleware/upload.ts
-import fs from 'fs';
-import path from 'path';
 import multer, { FileFilterCallback } from 'multer';
 import { Request, Response, NextFunction } from 'express';
 import { DATA_FOLDER } from '../config/env';

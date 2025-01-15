@@ -54,9 +54,12 @@ async function main() {
     logger.info(`Server is running on port ${PORT}`);
   });
 
+  return server;
 }
 
-main().catch((error) => {
+const server = main().catch((error) => {
   console.error("Error", error);
   process.exit(1);
 });
+
+export default server;

@@ -65,6 +65,11 @@ export default class FilesService {
 
         const projectDir = path.join(DATA_FOLDER, projectId);
         const endpath = path.join(projectDir, filePath);
+
+        if (!fs.existsSync(endpath)) {
+            throw new Error('Plik nie istnieje');
+        }
+
         try {
             fs.unlinkSync(endpath);
             logger.info(`Removed file at ${endpath}`);

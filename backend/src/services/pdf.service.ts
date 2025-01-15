@@ -9,7 +9,7 @@ export default class PdfService {
   static async ensureTempDir(): Promise<void> {
     if(!TEMP_DIR) {
         logger.error('TEMP_DIR is not defined');
-        throw new Error('TEMP_DIR is not defined');
+        return Promise.reject(new Error('TEMP_DIR is not defined'));
     }
     const absoluteTempDir = path.resolve(TEMP_DIR);
     logger.info(`TEMP_DIR resolved to ${absoluteTempDir}`);
@@ -30,7 +30,7 @@ export default class PdfService {
   static async createRandomFolder(): Promise<string> {
     const randomFolderName = uuidv4();
     if (!TEMP_DIR) {
-      throw new Error('TEMP_DIR is not defined');
+      return Promise.reject(new Error('TEMP_DIR is not defined'));
     }
     const absoluteTempDir = path.resolve(TEMP_DIR);
     const tempSubDir = path.join(absoluteTempDir, randomFolderName);
@@ -42,7 +42,7 @@ export default class PdfService {
   static async createCustomFolder(): Promise<string> {
     const customFolderName = uuidv4();
     if (!TEMP_DIR) {
-        throw new Error('TEMP_DIR is not defined');
+      return Promise.reject(new Error('TEMP_DIR is not defined'));
     }
     const absoluteTempDir = path.resolve(TEMP_DIR);
     const customFolderPath = path.join(absoluteTempDir, customFolderName);
@@ -74,6 +74,7 @@ export default class PdfService {
       }
     });
     logger.info(`Copied files from ${src} to ${dest}`);
+    return Promise.resolve();
   }
 
   static async compileLatexToPdf(mainTexPath: string, outputDir: string): Promise<{ path: string; logs: string }> {
