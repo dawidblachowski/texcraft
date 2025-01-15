@@ -182,6 +182,24 @@ export default class ProjectService {
         }
 
         try {
+            if(DATA_FOLDER === undefined) {
+                throw new Error('Folder danych nie jest zdefiniowany');
+            }
+            // Remove project directory recursively
+            const projectDir = path.join(DATA_FOLDER, projectId);
+            if (fs.existsSync(projectDir)) {
+                fs.rmdirSync(projectDir, { recursive: true });
+                logger.info(`Removed project directory: ${projectDir}`);
+            }
+
+            // Delete all related files from database
+            await prisma.file.deleteMany({
+                where: {
+                    projectId: projectId
+                }
+            });
+
+            // Delete the project
             await prisma.project.delete({
                 where: {
                     id: projectId
