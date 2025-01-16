@@ -81,10 +81,6 @@ export default class PdfService {
     return new Promise((resolve, reject) => {
       const command = `pdflatex -interaction=nonstopmode -output-directory=${outputDir} ${mainTexPath}`;
       exec(command, (error, stdout, stderr) => {
-        if (error) {
-          logger.error(`LaTeX compilation error: ${stderr.trim()}`);
-          return reject({ message: `Błąd kompilacji LaTeX: ${stderr.trim()}`, logs: stdout.trim() });
-        }
         const compiledPdfPath = path.join(outputDir, 'main.pdf');
         if (!fs.existsSync(compiledPdfPath)) {
           logger.error('PDF file was not generated.');

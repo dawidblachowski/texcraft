@@ -6,9 +6,11 @@
         <!-- File Tree Panel -->
         <SplitterPanel class="flex flex-col gap-4 h-full" :size="20" :minSize="20">
           <div class="flex w-full gap-4 p-2">
-            <Button label="Nowy" icon="pi pi-plus" class="w-1/2 p-button-success" @click="newFileDialogVisible=true" />
-            <Button label="Render" icon="pi pi-file" class="w-1/2 p-button-info" @click="renderProject" />
-            <Button label="Nowy Katalog" icon="pi pi-folder" class="w-1/2 p-button-warning" @click="newDirectoryDialogVisible=true" />
+            <Button icon="pi pi-plus" class="w-1/2 p-button-success" @click="newFileDialogVisible=true" />
+            <Button icon="pi pi-file" class="w-1/2 p-button-info" @click="renderProject" />
+            <Button icon="pi pi-folder" class="w-1/2 p-button-warning" @click="newDirectoryDialogVisible=true" />
+            <Button icon="pi pi-trash" class="w-1/2 p-button-danger" @click="removeFile" />
+            <Button icon="pi pi-arrows-h" class="w-1/2 p-button-secondary" @click="moveFileDialogVisible=true" />
           </div>
             <h2 class="text-xl font-bold mt-4 ml-4">{{ project?.title }}</h2>
             <h3 class="text-xl font-bold mt-1 ml-4">Pliki</h3>
@@ -28,6 +30,9 @@
         <SplitterPanel class="flex" :size="40">
           <div v-if="!selectedFile">
             Najpierw wybierz plik!
+          </div>
+          <div v-else-if="selectedFileMimeType && selectedFileMimeType.includes('image') ">
+             <embed :src="selectedFileContent" width="100%" height="100%" />
           </div>
           <div class="w-full h-full" v-else>
             <MonacoEditor :key="selectedFile.key" :fileId="selectedFile.key" :projectId="projectId" :socket="socket" />
@@ -50,6 +55,7 @@
         :closeOnEscape="true"
         class="dialog-container"
       >
+      
       <h2 style="">Utwórz nowy plik</h2>
             <div class="p-fluid form-section">
               <div class="field">
@@ -113,12 +119,38 @@
           </div>
         </div>
       </Dialog>
+
+      <!-- Move File Dialog -->
+      <Dialog
+        v-model:visible="moveFileDialogVisible"
+        header="Przenieś Plik"
+        :draggable="false"
+        :modal="true"
+        :closable="true"
+        :closeOnEscape="true"
+        class="dialog-container"
+      >
+        <h2>Wybierz nowy katalog</h2>
+        <Tree
+          :filter="true"
+          class="w-full h-full"
+          selectionMode="single"
+          v-model:selectionKeys="selectedMoveDirectory"
+          :value="formatDirectoryTree(fileTree)"
+          nodeKey="key"
+          :loading="filesLoading"
+        ></Tree>
+        <div class="field mt-4 flex justify-content-end gap-2">
+          <Button label="Anuluj" icon="pi pi-times" class="p-button-text" @click="moveFileDialogVisible = false" />
+          <Button label="Przenieś" icon="pi pi-check" class="p-button-success" @click="moveFile" />
+        </div>
+      </Dialog>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, onMounted, onBeforeUnmount, watch, computed } from "vue";
 import { useToast } from "primevue/usetoast";
 import TopBar from "../components/TopBar.vue";
 import httpClient from "../utils/httpClient";
@@ -141,11 +173,13 @@ interface File {
 
 const newFileDialogVisible = ref(false);
 const newDirectoryDialogVisible = ref(false);
+const moveFileDialogVisible = ref(false);
 const toast = useToast();
 const route = useRoute();
 const projectId = route.params.id as string;
-const fileTree = ref([]);
+const fileTree = ref<Array<File>>([]);
 const selectedFileSelectionKeys = ref<string[]>([]);
+const selectedMoveDirectory = ref<TreeSelectionKeys | undefined>(undefined);
 
 const selectedFile = ref<TreeSelectionKeys | undefined>(undefined);
 const pdfContent = ref("");
@@ -153,6 +187,14 @@ const uploadedFile = ref<Blob | null>(null);
 const newFileName = ref("");
 const newDirectoryName = ref("");
 const filesLoading = ref(true);
+const selectedFileContent = ref<any>("");
+const selectedFileMimeType = computed(() => {
+  if (selectedFile.value) {
+    const selectedFileModel = fileTree.value.find(file => file.id === selectedFile?.value?.key);
+    return selectedFileModel?.mimeType;
+  }
+  return "";
+});
 
 const authStore = useAuthStore();
 
@@ -173,6 +215,31 @@ socket.on('connect', () => {
     filesLoading.value = false;
   });
 
+});
+
+// const selectedFileLink = computed(() => {
+//   if (selectedFile.value) {
+//     return `/project/${projectId}/files/${selectedFile.value.key}/content`;
+//   }
+//   return "";
+// });
+
+
+watch(selectedFile, async (newFile) => {
+  if (newFile) {
+    const selectedFileModel = fileTree.value.find(file => file.id === newFile.key); 
+    if(selectedFileModel) 
+    {
+      if(selectedFileModel.mimeType.includes("image")) {
+        const response = await httpClient.get(`/project/${projectId}/files/${selectedFileModel.id}/content`, {
+          responseType: 'blob'
+        });
+        selectedFileContent.value = URL.createObjectURL(response.data);
+      }
+    }
+  } else {
+    selectedFileContent.value = "";
+  }
 });
 
 const project = ref<{ title: string } | null>(null);
@@ -339,6 +406,73 @@ const uploadFile = async () => {
   }
 };
 
+const removeFile = async () => {
+  if (!selectedFile.value) {
+    toast.add({
+      severity: "warn",
+      summary: "Brak Pliku",
+      detail: "Najpierw wybierz plik do usunięcia!",
+      life: 3000,
+    });
+    return;
+  }
+
+  try {
+    await httpClient.delete(`/project/${projectId}/files/${selectedFile.value.key}`);
+    toast.add({
+      severity: "success",
+      summary: "Sukces",
+      detail: "Plik został usunięty",
+      life: 3000,
+    });
+    selectedFile.value = undefined;
+    socket.emit('joinProjectFileList', projectId);
+  } catch (error) {
+    toast.add({
+      severity: "error",
+      summary: "Błąd",
+      detail: (error as any).response?.data?.message || "Nie udało się usunąć pliku",
+      life: 3000,
+    });
+  }
+};
+
+const moveFile = async () => {
+  if (!selectedFile.value || !selectedMoveDirectory.value) {
+    toast.add({
+      severity: "warn",
+      summary: "Brak Pliku lub Katalogu",
+      detail: "Najpierw wybierz plik i nowy katalog!",
+      life: 3000,
+    });
+    return;
+  }
+
+  try {
+    await httpClient.put(`/project/${projectId}/files/move`, {
+      fileId: selectedFile.value.key,
+      parentId: selectedMoveDirectory.value.key,
+    });
+    toast.add({
+      severity: "success",
+      summary: "Sukces",
+      detail: "Plik został przeniesiony",
+      life: 3000,
+    });
+    selectedFile.value = undefined;
+    selectedMoveDirectory.value = undefined;
+    moveFileDialogVisible.value = false;
+    socket.emit('joinProjectFileList', projectId);
+  } catch (error) {
+    toast.add({
+      severity: "error",
+      summary: "Błąd",
+      detail: (error as any).response?.data?.message || "Nie udało się przenieść pliku",
+      life: 3000,
+    });
+  }
+};
+
 const getItemImage = (mimeType: string | null) => {
   if (!mimeType) {
     return "pi pi-file";
@@ -363,6 +497,24 @@ const formatFileTree = (fileTree: Array<File>) => {
         key: node.id,
         icon: node.isDirectory ? "pi pi-folder" : getItemImage(node.mimeType),
         selectable: !node.isDirectory,
+        children: buildTree(nodes, node.id),
+      }));
+
+    return children;
+  };
+
+  return buildTree(fileTree);
+};
+
+const formatDirectoryTree = (fileTree: Array<File>) => {
+  const buildTree = (nodes: Array<File>, parentId: string | null = null): Array<any> => {
+    const children = nodes
+      .filter(node => node.parentId === parentId && node.isDirectory)
+      .map(node => ({
+        label: node.filename,
+        key: node.id,
+        icon: "pi pi-folder",
+        selectable: true,
         children: buildTree(nodes, node.id),
       }));
 

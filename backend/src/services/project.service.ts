@@ -461,4 +461,103 @@ export default class ProjectService {
             }
         }
     }
+
+    static async moveFileInProject(projectId: string, fileId: string, newParentId: string | null, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Projekt nie znaleziony");
+        }
+
+        const file = await prisma.file.findFirst({
+            where: {
+                id: fileId,
+                projectId,
+            },
+        });
+
+        if (!file) {
+            throw new Error("Plik nie znaleziony");
+        }
+
+        if (file.parentId === newParentId) {
+            throw new Error("Plik już znajduje się w tym katalogu");
+        }
+
+        try {
+            await FilesService.moveFile(fileId, newParentId);
+            logger.info(`Moved file: ${file.filename} in project: ${projectId} by user: ${userId}`);
+        } catch (error) {
+            logger.error(`Failed to move file: ${file.filename} in project: ${projectId} by user: ${userId}`);
+            throw new Error("Nie udało się przenieść pliku");
+        }
+    }
+
+    static async removeFile(projectId: string, fileId: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Projekt nie znaleziony");
+        }
+
+        const file = await prisma.file.findFirst({
+            where: {
+                id: fileId,
+                projectId,
+            },
+        });
+
+        if (!file) {
+            throw new Error("Plik nie znaleziony");
+        }
+
+        try {
+            await FilesService.removeFile(file.filename, projectId);
+            await prisma.file.delete({
+                where: {
+                    id: fileId,
+                },
+            });
+            logger.info(`Removed file: ${file.filename} in project: ${projectId} by user: ${userId}`);
+        } catch (error) {
+            logger.error(`Failed to remove file: ${file.filename} in project: ${projectId} by user: ${userId}`);
+            throw new Error("Nie udało się usunąć pliku");
+        }
+    }
+
+    static async getFile(projectId: string, fileId: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Projekt nie znaleziony");
+        }
+
+        const file = await prisma.file.findFirst({
+            where: {
+                id: fileId,
+                projectId,
+            },
+        });
+
+        if (!file) {
+            throw new Error("Plik nie znaleziony");
+        }
+        return file;
+    }
+
+    static async getFileContent(projectId: string, fileId: string, userId: string) {
+        const project = await this.getProjectIfUserHasRights(projectId, userId);
+        if (!project) {
+            throw new Error("Projekt nie znaleziony");
+        }
+        const file = await this.getFile(projectId, fileId, userId);
+        if (file.isDirectory) {
+            throw new Error("Nie można pobrać zawartości katalogu");
+        }
+
+        try {
+            const content = await FilesService.getFileContent(fileId);
+            return content;
+        } catch (error) {
+            logger.error(`Failed to get content of file: ${file.filename} in project: ${projectId} by user: ${userId}`);
+            throw new Error("Nie udało się pobrać zawartości pliku");
+        }
+    }
 }

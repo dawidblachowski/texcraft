@@ -150,7 +150,14 @@ export function configureSocketIO(io: Server) {
           const doc = new Y.Doc();
           fileMap.set(fileId, doc);
 
-          const fileContent = await FilesService.getFileContent(fileId);
+          const mimeType = await FilesService.getFileMimeType(fileId);
+          if(!mimeType.includes('text')) {
+            logger.error(`File ${fileId} is not a text file`);
+            socket.emit('error', 'Plik nie jest plikiem  tekstowym.');
+            return;
+          }
+            const fileContentBuffer = await FilesService.getFileContent(fileId);
+            const fileContent = new TextDecoder('utf-8').decode(fileContentBuffer);
           if (fileContent) {
             const ytext = doc.getText(fileId);
             ytext.insert(0, fileContent);

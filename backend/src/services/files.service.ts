@@ -121,16 +121,16 @@ export default class FilesService {
         }
     }
 
-    static async getFileContent(fileId:string): Promise<string> {
+    static async getFileContent(fileId: string): Promise<Buffer> {
         if (DATA_FOLDER === undefined) {
             throw new Error('Folder danych nie jest zdefiniowany');
         }
-        let file
+        let file;
         try {
             file = await prisma.file.findUnique({
                 where: { id: fileId },
             });
-            if(!file){
+            if (!file) {
                 throw new Error('Plik nie istnieje w bazie');
             }
         } catch (error) {
@@ -148,7 +148,7 @@ export default class FilesService {
         }
 
         try {
-            const content = fs.readFileSync(filePathFull, 'utf8');
+            const content = fs.readFileSync(filePathFull);
             logger.info(`Got content of file at ${filePathFull}`);
             return content;
         } catch (error) {
@@ -207,6 +207,75 @@ export default class FilesService {
             logger.error(`Failed to save content of file at ${filePathFull}: ${error}`);
             throw new Error(`Failed to save content of file at ${filePathFull}`);
         }
+    }
+
+    static async moveFile(fileId: string, newParentId: string | null) {
+        try {
+            const file = await prisma.file.findUnique({
+                where: { id: fileId },
+            });
+
+            if (!file) {
+                throw new Error("Plik nie istnieje");
+            }
+            if(newParentId === fileId){
+                throw new Error("Nie można przenieść pliku do samego siebie");
+            }
+            if(newParentId !== null){
+                const newParent = await prisma.file.findUnique({
+                    where: { id: newParentId },
+                });
+                if (!newParent) {
+                    throw new Error("Katalog nadrzędny nie istnieje");
+                }
+                // Move file in filesystem
+                const oldFilePath = await this.getFilePathFromFile(file);
+                const newParentPath = await this.getFilePathFromFile(newParent);
+                if (newParentPath === undefined) {
+                    throw new Error("Ścieżka nowego katalogu nadrzędnego jest nieprawidłowa");
+                }
+                if (DATA_FOLDER === undefined) {
+                    throw new Error('Folder danych nie jest zdefiniowany');
+                }
+                const newFilePath = path.join(newParentPath, file.filename);
+                const oldFilePathFull = path.join(DATA_FOLDER, file.projectId, oldFilePath);
+                const newFilePathFull = path.join(DATA_FOLDER, file.projectId, newFilePath);
+                if (!fs.existsSync(oldFilePathFull)) {
+                    throw new Error('Plik nie istnieje');
+                }
+                if (fs.existsSync(newFilePathFull)) {
+                    throw new Error('Plik o takiej nazwie już istnieje');
+                }
+                fs.renameSync(oldFilePathFull, newFilePathFull);
+                await prisma.file.update({
+                    where: { id: fileId },
+                    data: {
+                        parentId: newParentId,
+                    },
+                });
+            }
+        } catch (error) {
+            logger.error(`Failed to move file ${fileId}: ${error}`);
+            throw new Error(`Failed to move file ${fileId}`);
+        }
+    }
+
+    static async getFileMimeType(fileId:string) {
+        let mimeType = '';
+        try {
+            const file = await prisma.file.findUnique({
+                select: { mimeType: true },
+                where: { id: fileId }
+            });
+            if(file && file.mimeType){
+                mimeType = file.mimeType;
+            }
+        }
+        catch (error) {
+            logger.error(`Failed to get file ${fileId}: ${error}`);
+            throw new Error(`Failed to get file ${fileId}`);
+        }
+        return mimeType;
     }
 
 }

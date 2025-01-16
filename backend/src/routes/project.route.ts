@@ -15,8 +15,13 @@ router.post("/", isAuthenticated, ProjectController.createProject);
 
 router.post("/:id/files/tex", isAuthenticated, ProjectController.createTexFile);
 router.post("/:id/files/upload", isAuthenticated, upload, handleUploadErrors, ProjectController.uploadFile);
-
+router.put("/:id/files/move", isAuthenticated, ProjectController.moveFile);
 router.get("/:id/files/structure", isAuthenticated, ProjectController.getFilesStructure);
+router.get("/:id/files/:fileId/content", isAuthenticated, ProjectController.getFileContent);
+router.delete("/:id/files/:fileId", isAuthenticated, ProjectController.removeFile);
+router.get("/:id/files/:fileId", isAuthenticated, ProjectController.getFile);
+
+
 router.post("/:id/directories", isAuthenticated, ProjectController.createDirectory);
 router.get("/:id/pdf", isAuthenticated, ProjectController.getPdf);
 

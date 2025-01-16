@@ -359,4 +359,102 @@ export class ProjectController {
         }
     }
 
+    static async moveFile(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Move a file in a project'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        const { fileId, parentId } = req.body;
+        logger.info(`Moving file: ${fileId} to directory: ${parentId} in project: ${projectId} by user: ${userId}`);
+
+        try {
+            await ProjectService.moveFileInProject(projectId, fileId, parentId, userId);
+            // Emit socket event
+            if (req.io) {
+                const files = await ProjectService.getFilesStructure(projectId, userId);
+                req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
+                logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
+            }
+            res.status(200).json({ message: "Plik przeniesiony" });
+        } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async removeFile(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Remove a file from a project'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        const fileId = req.params.fileId;
+        logger.info(`Removing file: ${fileId} from project: ${projectId} by user: ${userId}`);
+
+        try {
+            await ProjectService.removeFile(projectId, fileId, userId);
+            // Emit socket event
+            if (req.io) {
+                const files = await ProjectService.getFilesStructure(projectId, userId);
+                req.io.to(`project:fileList:${projectId}`).emit('fileList', files);
+                logger.info(`Emitting file list event for project: ${projectId} with files: ${JSON.stringify(files)}`);
+            }
+            res.status(200).json({ message: "Plik usunięty" });
+        } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async getFile(req: Request, res: Response, next:any)
+    {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Get a file by id'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        const fileId = req.params.fileId;
+        logger.info(`Fetching file: ${fileId} from project: ${projectId} by user: ${userId}`);
+
+        try {
+            const file = await ProjectService.getFile(projectId, fileId, userId);
+            res.status(200).json(file);
+        } catch (error) {
+            handleError(error, res);
+        }
+    }
+
+    static async getFileContent(req: Request, res: Response, next: any) {
+        /*     #swagger.tags = ['ProjectFile']
+                #swagger.description = 'Get the content of a file'
+        */
+        if (!req.user) {
+            res.status(401).json({ message: "Unauthorized" });
+            return;
+        }
+        const userId = req.user.id;
+        const projectId = req.params.id;
+        const fileId = req.params.fileId;
+        logger.info(`Fetching content of file: ${fileId} from project: ${projectId} by user: ${userId}`);
+
+        try {
+            const content = await ProjectService.getFileContent(projectId, fileId, userId);
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.status(200).send(content);
+        } catch (error) {
+            handleError(error, res);
+        }
+    }
+
 }
