@@ -335,7 +335,6 @@ export class ProjectController {
         const userId = req.user.id;
         const projectId = req.params.id;
         logger.info(`Generating PDF for project: ${projectId} by user: ${userId}`);
-
         let customFolderPath: string = '';
         try {
             const { pdfPath, logs, customFolderPath: cfp } = await ProjectService.getPdf(projectId, userId);
@@ -345,16 +344,19 @@ export class ProjectController {
             const stream = fs.createReadStream(pdfPath);
             stream.pipe(res);
             stream.on('close', () => {
-                fs.rmdirSync(customFolderPath, { recursive: true });
+            fs.rmdirSync(customFolderPath, { recursive: true });
+            logger.info(`Temporary folder ${customFolderPath} deleted after streaming PDF for project: ${projectId}`);
             });
         } catch (error) {
-            if (customFolderPath != '') {
-                fs.rmdirSync(customFolderPath, { recursive: true });
-            }
             if (error instanceof Error) {
                 res.status(400).json({ message: error.message, logs: (error as any).logs });
+                logger.error(`Error generating PDF for project: ${projectId} - ${error.message}`);
             } else {
                 handleError(error, res);
+            }
+            if (fs.existsSync(customFolderPath)) {
+                fs.rmdirSync(customFolderPath, { recursive: true });
+                logger.info(`Temporary folder ${customFolderPath} deleted after error for project: ${projectId}`);
             }
         }
     }
@@ -373,7 +375,7 @@ export class ProjectController {
         logger.info(`Moving file: ${fileId} to directory: ${parentId} in project: ${projectId} by user: ${userId}`);
 
         try {
-            await ProjectService.moveFileInProject(projectId, fileId, parentId, userId);
+            await ProjectService.moveFileInProject(projectId, fileId, parentId || null, userId);
             // Emit socket event
             if (req.io) {
                 const files = await ProjectService.getFilesStructure(projectId, userId);

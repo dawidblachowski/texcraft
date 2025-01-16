@@ -253,6 +253,27 @@ export default class FilesService {
                         parentId: newParentId,
                     },
                 });
+            } else {
+                // Move file to root
+                const oldFilePath = await this.getFilePathFromFile(file);
+                if (DATA_FOLDER === undefined) {
+                    throw new Error('Folder danych nie jest zdefiniowany');
+                }
+                const newFilePath = path.join(DATA_FOLDER, file.projectId, file.filename);
+                const oldFilePathFull = path.join(DATA_FOLDER, file.projectId, oldFilePath);
+                if (!fs.existsSync(oldFilePathFull)) {
+                    throw new Error('Plik nie istnieje');
+                }
+                if (fs.existsSync(newFilePath)) {
+                    throw new Error('Plik o takiej nazwie już istnieje');
+                }
+                fs.renameSync(oldFilePathFull, newFilePath);
+                await prisma.file.update({
+                    where: { id: fileId },
+                    data: {
+                        parentId: null,
+                    },
+                });
             }
         } catch (error) {
             logger.error(`Failed to move file ${fileId}: ${error}`);

@@ -80,13 +80,14 @@ export default class PdfService {
   static async compileLatexToPdf(mainTexPath: string, outputDir: string): Promise<{ path: string; logs: string }> {
     return new Promise((resolve, reject) => {
       const command = `pdflatex -interaction=nonstopmode -output-directory=${outputDir} ${mainTexPath}`;
-      exec(command, (error, stdout, stderr) => {
+      exec(command, { cwd: path.dirname(mainTexPath) } ,(error, stdout, stderr) => {
         const compiledPdfPath = path.join(outputDir, 'main.pdf');
         if (!fs.existsSync(compiledPdfPath)) {
           logger.error('PDF file was not generated.');
           return reject({ message: 'Plik PDF nie został wygenerowany.', logs: stdout.trim() });
         }
         logger.info(`Successfully compiled LaTeX to PDF at ${compiledPdfPath}`);
+        console.log(stdout);
         resolve({ path: compiledPdfPath, logs: stdout.trim() });
       });
     });

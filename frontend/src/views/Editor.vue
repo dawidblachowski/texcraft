@@ -31,8 +31,8 @@
           <div v-if="!selectedFile">
             Najpierw wybierz plik!
           </div>
-          <div v-else-if="selectedFileMimeType && selectedFileMimeType.includes('image') ">
-             <embed :src="selectedFileContent" width="100%" height="100%" />
+          <div v-else-if="selectedFileMimeType && selectedFileMimeType.includes('image')" class="w-full h-full">
+             <img :src="selectedFileContent" class="w-full h-full object-contain" />
           </div>
           <div class="w-full h-full" v-else>
             <MonacoEditor :key="selectedFile.key" :fileId="selectedFile.key" :projectId="projectId" :socket="socket" />
@@ -217,24 +217,21 @@ socket.on('connect', () => {
 
 });
 
-// const selectedFileLink = computed(() => {
-//   if (selectedFile.value) {
-//     return `/project/${projectId}/files/${selectedFile.value.key}/content`;
-//   }
-//   return "";
-// });
-
-
 watch(selectedFile, async (newFile) => {
   if (newFile) {
     const selectedFileModel = fileTree.value.find(file => file.id === newFile.key); 
     if(selectedFileModel) 
     {
       if(selectedFileModel.mimeType.includes("image")) {
-        const response = await httpClient.get(`/project/${projectId}/files/${selectedFileModel.id}/content`, {
-          responseType: 'blob'
-        });
-        selectedFileContent.value = URL.createObjectURL(response.data);
+        try {
+          const response = await httpClient.get(`/project/${projectId}/files/${selectedFileModel.id}/content`, {
+            responseType: 'blob'
+          });
+          const blob = new Blob([response.data], { type: selectedFileModel.mimeType });
+          selectedFileContent.value = URL.createObjectURL(blob);
+        } catch (error) {
+          console.error("Failed to fetch file content:", error);
+        }
       }
     }
   } else {
@@ -438,7 +435,7 @@ const removeFile = async () => {
 };
 
 const moveFile = async () => {
-  if (!selectedFile.value || !selectedMoveDirectory.value) {
+  if (!selectedFile.value) {
     toast.add({
       severity: "warn",
       summary: "Brak Pliku lub Katalogu",
@@ -448,10 +445,13 @@ const moveFile = async () => {
     return;
   }
 
+  const selectedMoveDirectoryKey = selectedMoveDirectory.value ? Object.keys(selectedMoveDirectory.value)[0] : '';
+
   try {
+    console.log(selectedFile.value.key, selectedMoveDirectoryKey);
     await httpClient.put(`/project/${projectId}/files/move`, {
       fileId: selectedFile.value.key,
-      parentId: selectedMoveDirectory.value.key,
+      parentId: selectedMoveDirectoryKey,
     });
     toast.add({
       severity: "success",
