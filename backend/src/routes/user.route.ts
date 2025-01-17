@@ -5,6 +5,5 @@ import { Router } from "express";
 const router = Router();
 
 router.get("/profile", isAuthenticated, UserController.getProfile);
-router.delete("/", isAuthenticated, UserController.deleteUser);
 
 export default router;
